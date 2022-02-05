@@ -1,3 +1,4 @@
+
 /* ******************************************
  * Doors and drawers
  * By José G Moya Y 
@@ -15,15 +16,28 @@
  * tried before using other programming engines.
  ***************************************** */
 
-final int[] NBLACK= {0x43, 0x52, 0x3d, 0};
-final int[] NWHITE= {0xc7, 0xf0, 0xd8, 0};
+/* In p5js I would use these: */
+final int[] NBLACKArr= {0x43, 0x52, 0x3d, 255};
+final int[] NWHITEArr= {0xc7, 0xf0, 0xd8, 255};
+/* But Java Processing uses unsigned 64 bit integers instead */
+final int NBLACK=0xff42523d;
+final int NWHITE=0xffc7f0d8;
+
+int status;
+final int STATUSINTRO=0;
+final int STATUSFLOOR=2;
+final int STATUSROOM=3;
+final int STATUSOBJECT=4;
+
 PGraphics NokiaScreen;  
 int scale=1; /* sreen resize scale*/
 int nkw=0;
 int nkh=0;
 int nkbuffsize;
 int myY=0, myX=0;
+int myFloor=0;
 
+boolean waitKeyAny= true; /* wait for any key */
 void setup() {
   fullScreen();
   noSmooth();
@@ -32,10 +46,14 @@ void setup() {
   /* These are computed in advance for speed up,
    just in case compiler does not optimize them
    */
-
+  
+  thread("sprites");
   nkh=scale*48;
   nkw=scale*84;
   nkbuffsize=48*84*displayDensity();
+  createPixelFont();
+  iniciaPisos();
+  status=STATUSFLOOR;
   NokiaScreen.beginDraw();
   NokiaScreen.noSmooth();
   NokiaScreen.background(255);
@@ -43,19 +61,89 @@ void setup() {
 }
 
 void draw() {
-
-  //colorFilter();
   pushStyle();
   imageMode(CENTER);
   NokiaScreen.beginDraw();
-  NokiaScreen.stroke(0);
-  NokiaScreen.ellipse(84/2, 48/2, 40, 40);
+  if (spritesLoaded==0) status=0; else status=STATUSFLOOR;
+  
+  switch (status) {
+  case STATUSINTRO:
+  default:
+    waitKeyAny=true;
+    drawIntro();
+    break;
+  case STATUSFLOOR:
+    NokiaScreen.background(0);
+    drawFloor();
+    break;
+   
+  }
+//  outString(""+status,20,32);
+//  outString(""+frameCount,64/2,32);
   NokiaScreen.endDraw();
-  image(NokiaScreen, width/2, height/2, nkw, nkh);
+  colorFilter();
+
+  image(NokiaScreen, width/2, height/2, nkw, nkh); 
   popStyle();
+  //noLoop();
 }
 
-void keyPress() {
+void drawFloor(){
+  NokiaScreen.background(255);
+  for (int f=0;f<8;f++){
+    switch (piso[myFloor][f].rtype){
+      case HSTAIRS:
+      NokiaScreen.rect(f, 0,16*f,16);
+       break;
+      case HOFFICE:
+      NokiaScreen.rect(f,0,16*f,16);
+    }
+  }
+}
+
+void drawIntro() {
+  NokiaScreen.stroke(0);
+  NokiaScreen.background(255);
+  NokiaScreen.fill(255);
+  NokiaScreen.ellipse(84/2, 48/2, 40, 40);
+  centerString("Doors", 84/2, 12);
+  centerString("and", 84/2, 20);
+  centerString("Drawers", 84/2, 28);
+}
+
+void colorFilter() {
+  int clear=0, dark=0;
+  NokiaScreen.loadPixels();
+  for (int f=0; f<nkbuffsize; f++) {
+    int v=0;
+    int pix=NokiaScreen.pixels[f];
+
+    for (int g=0; g<3; g++) {
+      v= v | (pix & (255 >> g));
+    }
+    if (v>128) {
+      clear++;
+      NokiaScreen.pixels[f] =NWHITE;
+    } else {
+      dark++;
+      NokiaScreen.pixels[f]=NBLACK;
+    }
+  }
+  NokiaScreen.updatePixels();
+   // Debug:
+   // println(dark+" dark pixels and "+clear+" clear pixels");
+}
+
+
+
+void keyPressed() {
+
+  if (waitKeyAny) {
+    println("Any key Pressed"+status);
+    status++;
+    return;
+  }
+  println("Keypressed");
   if (key!=CODED) {
     switch(key) {
     case 'W': 
@@ -107,21 +195,4 @@ void keyPress() {
       break;
     }
   }
-}
-void colorFilter() {
-  NokiaScreen.loadPixels();
-  for (int f=0; f<nkbuffsize; f+=4) {
-    int v=0;
-    for (int g=0; g<3; g++) {
-      v=v|NokiaScreen.pixels[f+g];
-    }
-    if (v>128) {
-      for (int g=0; g<4; g++)
-        NokiaScreen.pixels[f+g]=NWHITE[g];
-    } else {
-      for (int g=0; g<4; g++)
-        NokiaScreen.pixels[f+g]=NBLACK[g];
-    }
-  }
-  NokiaScreen.updatePixels();
 }
