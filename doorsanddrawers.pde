@@ -69,12 +69,13 @@ boolean drawing=false;
 void draw() {
   float ti;
   ti=millis();
-  if (drawing) return;
+  //if (drawing) return;
   drawing=true;
   pushStyle();
   imageMode(CENTER);
   NokiaScreen.beginDraw();
   if (spritesLoaded==0) {
+    outString("Sprites Loading",32,0);  
     status=STATUSINTRO;
   } else {
     //status=STATUSFLOOR;
@@ -82,7 +83,6 @@ void draw() {
   println(status);
   switch (status) {
   case STATUSINTRO:
-  default:
     maxX=1;
     maxY=1;
     waitKeyAny=true;
@@ -103,17 +103,19 @@ void draw() {
     maxX=2;
     maxY=1;
     dialog();
-  }
-
+    break;
+ default:
+   outString("STATUS is:"+status,0,32);
+}
 
   //  outString(""+status,20,32);
-  //  outString(""+frameCount,64/2,32);
+  //centerString("Frame:"+frameCount,64/2,32,0);
   NokiaScreen.endDraw();
   colorFilter();
   image(NokiaScreen, width/2, height/2, nkw, nkh); 
   popStyle();
   drawing=false;
-  //println (millis()-ti);
+  println (millis()-ti +" milliseconds per frame");
   //if (status==STATUSFLOOR) noLoop();
 }
 
@@ -183,10 +185,9 @@ void colorFilter() {
 }
 
 
-
 void keyPressed() {
 
-  if (waitKeyAny) {
+  if (waitKeyAny|status==STATUSINTRO) {
     println("Any key Pressed"+status);
     if (status==STATUSINTRO) status=STATUSFLOOR;
     return;
