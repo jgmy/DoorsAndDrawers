@@ -9,7 +9,7 @@ HashMap<String,PImage> pixelFont;
 void createPixelFont(){
   String caracter;
   PImage FFont;
-  FFont=loadImage("nokia_font_dark_strip.png");
+  FFont=loadImage("assets_fonts/nokia_font_dark_strip.png");
   Font=addAlpha(FFont);
  // println( stripOrder);
   pixelFont=new HashMap<String,PImage>();  
@@ -25,8 +25,9 @@ void createPixelFont(){
   }
 }
 
-int outString(String str,float x, float y){
+int outString(String str, float x, float y, int spacing){
  PImage tempImg;
+ int myspacing=7+spacing;
   if (pixelFont==null) return(-1);
   for (int f=0;f< str.length(); f++){
     if ((tempImg=pixelFont.get(str.substring(f,f+1)))==null){
@@ -34,17 +35,24 @@ int outString(String str,float x, float y){
       println("error: tempImg is null");
       
     } else {
-      NokiaScreen.image(tempImg,x+f*8,y);
+      NokiaScreen.image(tempImg,x+f*myspacing,y);
       
     }
  
   } 
- return 0;
+ return 0; 
+}
+int outString(String str,float x, float y){
+ return outString( str, x,  y,1);
 }
 
 void centerString(String str,float cx, float y){
- PImage tempImg;
-int w=str.length()*8;
+  centerString(str,cx,y,1);
+}
+
+void centerString(String str,float cx, float y,int spacing){
+PImage tempImg;
+int w=str.length()*(7+spacing);
  int x=int(cx-w/2);
   if (pixelFont==null) return;
   for (int f=0;f< str.length(); f++){
@@ -53,12 +61,9 @@ int w=str.length()*8;
       println("error: tempImg is null");
       
     } else {
-      NokiaScreen.image(tempImg,x+f*8,y);
-      
+      NokiaScreen.image(tempImg,x+f*(7+spacing),y);
     }
- 
   } 
- 
 }
 
 

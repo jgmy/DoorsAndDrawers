@@ -19,13 +19,13 @@ int spritesLoaded=0;
 
 void sprites(){
   spritesLoaded=0;
-  doorOffice=loadImage("office1.png");
-  sprPadlock=loadImage("Padlock.png");
-  doorStairs=loadImage("Stairs.png");
-  doorToilet=loadImage("Toilet.png");
-  doorKitchen=loadImage("Kitchen.png");
-  doorLab=loadImage("Lab.png");
-  doorLobby=loadImage("Lobby.png");
+  doorOffice=loadImage("assets_rooms/office1.png");
+  sprPadlock=loadImage("assets_rooms/Padlock.png");
+  doorStairs=loadImage("assets_rooms/Stairs.png");
+  doorToilet=loadImage("assets_rooms/Toilet.png");
+  doorKitchen=loadImage("assets_rooms/Kitchen.png");
+  doorLab=loadImage("assets_rooms/Lab.png");
+  doorLobby=loadImage("assets_rooms/Lobby.png");
   spritesLoaded=1;
   println("All Sprites loaded");
   iniciaPisos();

@@ -23,18 +23,23 @@ final int[] NWHITEArr= {0xc7, 0xf0, 0xd8, 255};
 final int NBLACK=0xff42523d;
 final int NWHITE=0xffc7f0d8;
 
-int status;
+int status; /* Chooses between screens */
 final int STATUSINTRO=0;
 final int STATUSFLOOR=2;
 final int STATUSROOM=3;
 final int STATUSOBJECT=4;
+final int STATUSDIALOG=128; /* this will be added to status */
+final int STATUSEXITGAME=5; /* after confirming exit building */
+int dialognum; /* Chooses between Dialogs */
+
+final int CONFIRM_EXIT=1;
 
 PGraphics NokiaScreen;  
 int scale=1; /* sreen resize scale*/
 int nkw=0;
 int nkh=0;
 int nkbuffsize;
-int myY=0, myX=0;
+int myY=0, myX=0,storeFloorX=0;
 int maxX=8, maxY=4;
 int myFloor=0;
 
@@ -66,7 +71,6 @@ void draw() {
   float ti;
   ti=millis();
   if (drawing) return;
-
   drawing=true;
   pushStyle();
   imageMode(CENTER);
@@ -74,12 +78,14 @@ void draw() {
   if (spritesLoaded==0) {
     status=STATUSINTRO;
   } else {
-    status=STATUSFLOOR;
+    //status=STATUSFLOOR;
   }
-
+  println(status);
   switch (status) {
   case STATUSINTRO:
   default:
+    maxX=0;
+    maxY=0;
     waitKeyAny=true;
     drawIntro();
     println("Drawing Intro");
@@ -92,7 +98,15 @@ void draw() {
     println("Drawing floor");
     drawFloor();
     break;
+  case STATUSDIALOG:
+    case (STATUSDIALOG | STATUSFLOOR):
+    waitKeyAny=false;
+    maxX=2;
+    maxY=0;
+    dialog();
   }
+
+
   //  outString(""+status,20,32);
   //  outString(""+frameCount,64/2,32);
   NokiaScreen.endDraw();
@@ -104,12 +118,7 @@ void draw() {
   //if (status==STATUSFLOOR) noLoop();
 }
 
-
-/*
-12345678  0123456
- ^       < ^
- */
-
+/* Draw a floor, with scrolling */
 void drawFloor() {
   int drawx;
   NokiaScreen.background(255, 255, 255, 255);
@@ -118,29 +127,33 @@ void drawFloor() {
   for (int doorn=0; doorn<8; doorn++) {
     drawx=floorx+32*doorn;
     while (drawx>7*32) {
-        drawx=drawx-8*32;
+      drawx=drawx-8*32;
     }
     if (piso[myFloor][doorn].outImage!=null) {
       println("door"+doorn+" at "+drawx);
       if (drawx>=-60 && drawx<=84) { 
         NokiaScreen.image(piso[myFloor][doorn].outImage, drawx, 0);    
         //println("Drawing floor x:"+(floorx*32+(myX % 32)));
-        if (piso[myFloor][doorn].rtype==HSTAIRS)  {
-          outString(""+myFloor,drawx+8,0);
+        if (piso[myFloor][doorn].rtype==HSTAIRS) {
+          outString(""+myFloor, drawx+8, 0);
         }
-    } else {
+      } else {
         println("drawx out of bounds:"+drawx);
       }
     } else {
-      println("piso["+myFloor+"]["+floorx+"].outImage is null");
-      println("piso rtype:"+piso[myFloor][floorx].rtype);
+      println("piso["+myFloor+"]["+doorn+"].outImage is null");
+      println("piso rtype:"+piso[myFloor][doorn].rtype);
     }
   }
-  
+
   int selDoor=int(1+myX/32) % 8;
-  centerString(selDoor+":"+piso[myFloor][selDoor].name,42,33);
-  
+  if (piso[myFloor][selDoor].rtype==HSTAIRS) {
+    centerString(myFloor==0 ? "Go Up/Exit":"Go Up/Down", 42, 33, 0);
+  } else {
+    centerString(selDoor+":"+piso[myFloor][selDoor].name, 42, 33);
+  }
 }
+
 void drawIntro() {
   NokiaScreen.stroke(0);
   NokiaScreen.background(255);
@@ -185,14 +198,12 @@ void keyPressed() {
     case 'W': 
     case 'w': 
     case '8':
-      myY--;
-      while (myY<0) myY+=maxY;
+      doUp();
       break;
     case 'S': 
     case 's': 
     case '2':
-      // 48/16=3
-      myY=(myY+1)%maxY;
+      doDown();
       break;
     case 'A': 
     case 'a': 
@@ -217,12 +228,10 @@ void keyPressed() {
   } else {
     switch(keyCode) {
     case UP: 
-      myY--;
-      while (myY<0) myY+=maxY;
-      break;
+      doUp();
     case DOWN:
       // 48/16=3
-      myY=(myY+1)%maxY;
+      doDown();
       break;
     case LEFT:
       myX--;
@@ -237,5 +246,56 @@ void keyPressed() {
       /* BACK ANDRODID BUTTON: Exit form mode */
       break;
     }
+  }
+}
+
+/* Processes "UP" key:*/
+void doUp() {
+  if (status==STATUSFLOOR) {
+    int selDoor=int(1+myX/32) % 8;
+    if (piso[myFloor][selDoor].rtype==HSTAIRS) {
+      if (myFloor<8) {
+        myFloor++;
+      }
+    }
+  } else {  
+    myY--;
+    while (myY<0) myY+=maxY;
+  }
+}
+
+void doDown() {
+  if (status==STATUSFLOOR) {
+    int selDoor=int(1+myX/32) % 8;
+    if (piso[myFloor][selDoor].rtype==HSTAIRS) {
+      if (myFloor>0) {
+        myFloor--;
+      } else {
+        status=STATUSDIALOG | STATUSFLOOR;
+        dialognum=CONFIRM_EXIT;
+        storeFloorX=myX;
+        myX=0;
+        maxX=1; maxY=0;
+      }
+    }
+  } else {
+    myY=(myY+1)%maxY;
+  }
+}
+
+void dialogReturn(){
+  switch (dialognum){
+    case CONFIRM_EXIT:
+      if (myX==0) {
+        status=STATUSEXITGAME;
+        return;
+      } else {
+        // XOR StatusDIALOG bit
+        status^=STATUSDIALOG;
+        if(status==STATUSFLOOR){
+          myX=storeFloorX;
+        }
+      }
+    break;
   }
 }
