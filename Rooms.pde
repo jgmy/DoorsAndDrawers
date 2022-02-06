@@ -18,6 +18,7 @@ int spritesLoaded=0;
   PImage doorLobby;
 
 void sprites(){
+  spritesLoaded=0;
   doorOffice=loadImage("office1.png");
   sprPadlock=loadImage("Padlock.png");
   doorStairs=loadImage("Stairs.png");
@@ -26,6 +27,8 @@ void sprites(){
   doorLab=loadImage("Lab.png");
   doorLobby=loadImage("Lobby.png");
   spritesLoaded=1;
+  println("All Sprites loaded");
+  iniciaPisos();
 }
 void iniciaPisos() {
   dist=new IntList();

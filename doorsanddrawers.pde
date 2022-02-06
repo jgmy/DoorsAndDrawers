@@ -35,6 +35,7 @@ int nkw=0;
 int nkh=0;
 int nkbuffsize;
 int myY=0, myX=0;
+int maxX=8, maxY=4;
 int myFloor=0;
 
 boolean waitKeyAny= true; /* wait for any key */
@@ -46,61 +47,100 @@ void setup() {
   /* These are computed in advance for speed up,
    just in case compiler does not optimize them
    */
-  
+
   thread("sprites");
   nkh=scale*48;
   nkw=scale*84;
   nkbuffsize=48*84*displayDensity();
   createPixelFont();
-  iniciaPisos();
+  // This will be started when sprites load
+  //iniciaPisos();
   status=STATUSFLOOR;
   NokiaScreen.beginDraw();
   NokiaScreen.noSmooth();
   NokiaScreen.background(255);
   NokiaScreen.endDraw();
 }
-
+boolean drawing=false;
 void draw() {
+  float ti;
+  ti=millis();
+  if (drawing) return;
+
+  drawing=true;
   pushStyle();
   imageMode(CENTER);
   NokiaScreen.beginDraw();
-  if (spritesLoaded==0) status=0; else status=STATUSFLOOR;
-  
+  if (spritesLoaded==0) {
+    status=STATUSINTRO;
+  } else {
+    status=STATUSFLOOR;
+  }
+
   switch (status) {
   case STATUSINTRO:
   default:
     waitKeyAny=true;
     drawIntro();
+    println("Drawing Intro");
     break;
   case STATUSFLOOR:
+    waitKeyAny=false;
+    maxX=32*8;
+    maxY=8;
     NokiaScreen.background(0);
+    println("Drawing floor");
     drawFloor();
     break;
-   
   }
-//  outString(""+status,20,32);
-//  outString(""+frameCount,64/2,32);
+  //  outString(""+status,20,32);
+  //  outString(""+frameCount,64/2,32);
   NokiaScreen.endDraw();
   colorFilter();
-
   image(NokiaScreen, width/2, height/2, nkw, nkh); 
   popStyle();
-  //noLoop();
+  drawing=false;
+  //println (millis()-ti);
+  //if (status==STATUSFLOOR) noLoop();
 }
 
-void drawFloor(){
-  NokiaScreen.background(255);
-  for (int f=0;f<8;f++){
-    switch (piso[myFloor][f].rtype){
-      case HSTAIRS:
-      NokiaScreen.rect(f, 0,16*f,16);
-       break;
-      case HOFFICE:
-      NokiaScreen.rect(f,0,16*f,16);
+
+/*
+12345678  0123456
+ ^       < ^
+ */
+
+void drawFloor() {
+  int drawx;
+  NokiaScreen.background(255, 255, 255, 255);
+  int floorx=-myX;
+  if (floorx<0) floorx+=8*32;
+  for (int doorn=0; doorn<8; doorn++) {
+    drawx=floorx+32*doorn;
+    while (drawx>7*32) {
+        drawx=drawx-8*32;
+    }
+    if (piso[myFloor][doorn].outImage!=null) {
+      println("door"+doorn+" at "+drawx);
+      if (drawx>=-60 && drawx<=84) { 
+        NokiaScreen.image(piso[myFloor][doorn].outImage, drawx, 0);    
+        //println("Drawing floor x:"+(floorx*32+(myX % 32)));
+        if (piso[myFloor][doorn].rtype==HSTAIRS)  {
+          outString(""+myFloor,drawx+8,0);
+        }
+    } else {
+        println("drawx out of bounds:"+drawx);
+      }
+    } else {
+      println("piso["+myFloor+"]["+floorx+"].outImage is null");
+      println("piso rtype:"+piso[myFloor][floorx].rtype);
     }
   }
+  
+  int selDoor=int(1+myX/32) % 8;
+  centerString(selDoor+":"+piso[myFloor][selDoor].name,42,33);
+  
 }
-
 void drawIntro() {
   NokiaScreen.stroke(0);
   NokiaScreen.background(255);
@@ -112,7 +152,7 @@ void drawIntro() {
 }
 
 void colorFilter() {
-  int clear=0, dark=0;
+
   NokiaScreen.loadPixels();
   for (int f=0; f<nkbuffsize; f++) {
     int v=0;
@@ -122,16 +162,12 @@ void colorFilter() {
       v= v | (pix & (255 >> g));
     }
     if (v>128) {
-      clear++;
       NokiaScreen.pixels[f] =NWHITE;
     } else {
-      dark++;
       NokiaScreen.pixels[f]=NBLACK;
     }
   }
   NokiaScreen.updatePixels();
-   // Debug:
-   // println(dark+" dark pixels and "+clear+" clear pixels");
 }
 
 
@@ -140,7 +176,7 @@ void keyPressed() {
 
   if (waitKeyAny) {
     println("Any key Pressed"+status);
-    status++;
+    if (status==STATUSINTRO) status=STATUSFLOOR;
     return;
   }
   println("Keypressed");
@@ -149,24 +185,28 @@ void keyPressed() {
     case 'W': 
     case 'w': 
     case '8':
-      if (myY>0) myY--;
+      myY--;
+      while (myY<0) myY+=maxY;
       break;
     case 'S': 
     case 's': 
     case '2':
       // 48/16=3
-      if (myY<4) myY++;
+      myY=(myY+1)%maxY;
       break;
     case 'A': 
     case 'a': 
     case '4':
-      if (myX>0) myX--;
+      myX--;
+      while (myX<0) myX+=maxX;
+      println("myX=", myX);
       break;
     case 'D': 
     case 'd': 
     case '6':
       // 84/16=5.25
-      if (myX<6) myX++;
+      myX=(myX+1)%maxX;
+      println("myX=", myX);
       break;
     case ' ':
       /* SELECTION -- Decide what to do */
@@ -176,20 +216,23 @@ void keyPressed() {
     }
   } else {
     switch(keyCode) {
-    case UP:
-      if (myY>0) myY--;
+    case UP: 
+      myY--;
+      while (myY<0) myY+=maxY;
       break;
     case DOWN:
       // 48/16=3
-      if (myY<4) myY++;
+      myY=(myY+1)%maxY;
       break;
     case LEFT:
-      if (myX>0) myX--;
+      myX--;
+      while (myX<0) myX+=maxX;
       break;
     case RIGHT:
       // 84/16=5.25
-      if (myX<6) myX++;
+      myX=(myX+1)%maxX;
       break;
+
     case  4:
       /* BACK ANDRODID BUTTON: Exit form mode */
       break;
