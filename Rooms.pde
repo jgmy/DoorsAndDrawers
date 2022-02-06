@@ -1,3 +1,5 @@
+import java.io.*;
+
 final int HLOBBY=0;
 final int HOFFICE=1;
 final int HKITCHEN=2;
@@ -19,13 +21,17 @@ int spritesLoaded=0;
 
 void sprites(){
   spritesLoaded=0;
-  doorOffice=loadImage("assets_rooms/office1.png");
-  sprPadlock=loadImage("assets_rooms/Padlock.png");
-  doorStairs=loadImage("assets_rooms/Stairs.png");
-  doorToilet=loadImage("assets_rooms/Toilet.png");
-  doorKitchen=loadImage("assets_rooms/Kitchen.png");
-  doorLab=loadImage("assets_rooms/Lab.png");
-  doorLobby=loadImage("assets_rooms/Lobby.png");
+  //String path=dataPath(File.separator)+File.separator+"assets_rooms"+File.separator;
+  String path="";
+  doorOffice=loadImage(path+"office1.png");
+ 
+  if (doorOffice==null) println("doorOffice not found");
+  sprPadlock=loadImage(path+"Padlock.png");
+  doorStairs=loadImage(path+"Stairs.png");
+  doorToilet=loadImage(path+"Toilet.png");
+  doorKitchen=loadImage(path+"Kitchen.png");
+  doorLab=loadImage(path+"Lab.png");
+  doorLobby=loadImage(path+"Lobby.png");
   spritesLoaded=1;
   println("All Sprites loaded");
   iniciaPisos();

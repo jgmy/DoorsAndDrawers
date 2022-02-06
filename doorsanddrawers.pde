@@ -1,4 +1,3 @@
-
 /* ******************************************
  * Doors and drawers
  * By José G Moya Y 
@@ -39,7 +38,7 @@ int scale=1; /* sreen resize scale*/
 int nkw=0;
 int nkh=0;
 int nkbuffsize;
-int myY=0, myX=0,storeFloorX=0;
+int myY=0, myX=0, storeFloorX=0;
 int maxX=8, maxY=4;
 int myFloor=0;
 
@@ -84,8 +83,8 @@ void draw() {
   switch (status) {
   case STATUSINTRO:
   default:
-    maxX=0;
-    maxY=0;
+    maxX=1;
+    maxY=1;
     waitKeyAny=true;
     drawIntro();
     println("Drawing Intro");
@@ -102,7 +101,7 @@ void draw() {
     case (STATUSDIALOG | STATUSFLOOR):
     waitKeyAny=false;
     maxX=2;
-    maxY=0;
+    maxY=1;
     dialog();
   }
 
@@ -194,6 +193,7 @@ void keyPressed() {
   }
   println("Keypressed");
   if (key!=CODED) {
+    /* CODED (ASCII) KEY USED */
     switch(key) {
     case 'W': 
     case 'w': 
@@ -220,12 +220,17 @@ void keyPressed() {
       println("myX=", myX);
       break;
     case ' ':
+    case RETURN:
+    case 5:
       /* SELECTION -- Decide what to do */
+      if ( (status & STATUSDIALOG)!=0) dialogReturn();
       break;
       case (char) 27:
       /* ESCAPE */
+      doEscape();
     }
   } else {
+    /* KEYCODE USED */
     switch(keyCode) {
     case UP: 
       doUp();
@@ -241,9 +246,9 @@ void keyPressed() {
       // 84/16=5.25
       myX=(myX+1)%maxX;
       break;
-
     case  4:
       /* BACK ANDRODID BUTTON: Exit form mode */
+      doEscape();
       break;
     }
   }
@@ -275,27 +280,42 @@ void doDown() {
         dialognum=CONFIRM_EXIT;
         storeFloorX=myX;
         myX=0;
-        maxX=1; maxY=0;
+        maxX=1; 
+        maxY=1;
       }
     }
   } else {
     myY=(myY+1)%maxY;
   }
 }
-
-void dialogReturn(){
-  switch (dialognum){
-    case CONFIRM_EXIT:
-      if (myX==0) {
-        status=STATUSEXITGAME;
-        return;
-      } else {
-        // XOR StatusDIALOG bit
-        status^=STATUSDIALOG;
-        if(status==STATUSFLOOR){
-          myX=storeFloorX;
-        }
+/* Process Escape. I.E. Exit from a Dialog */
+void doEscape() {
+  if ((status & STATUSDIALOG)!=0) {
+    switch (status ^STATUSDIALOG) {
+    case STATUSFLOOR:
+      // XOR StatusDIALOG bit
+      status^=STATUSDIALOG;
+      if (status==STATUSFLOOR) {
+        myX=storeFloorX;
       }
+      break;
+    }
+  }
+}
+
+void dialogReturn() {
+  switch (dialognum) {
+  case CONFIRM_EXIT:
+    if (myX==0) {
+      status=STATUSEXITGAME;
+      return;
+    } else {
+      // XOR StatusDIALOG bit
+      status^=STATUSDIALOG;
+      if (status==STATUSFLOOR) {
+        myX=storeFloorX;
+      }
+    }
     break;
   }
 }
