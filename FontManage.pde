@@ -9,9 +9,9 @@ HashMap<String,PImage> pixelFont;
 void createPixelFont(){
   String caracter;
   PImage FFont;
-  //String path=dataPath(File.separator)+File.separator+"assets_fonts"+File.separator;
+  //String path=dataPath("assets_fonts")+File.separator;
   String path="";
-  FFont=loadImage(path+"nokia_font_dark_strip.png");
+  FFont=loadImage(path+File.separator+"nokia_font_dark_strip.png");
   println(path+"nokia_font_dark_strip.png");
   Font=addAlpha(FFont);
  // println( stripOrder);

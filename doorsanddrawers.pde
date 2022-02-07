@@ -66,36 +66,42 @@ void setup() {
   NokiaScreen.endDraw();
 }
 boolean drawing=false;
+
+int lastStatus=STATUSINTRO;
 void draw() {
   float ti;
+  if (status!=lastStatus) println("Status changed from "+lastStatus+" to "+status);
   ti=millis();
-  //if (drawing) return;
+  if (drawing) {
+    println("Call to draw() while still drawing");
+    return;
+  }
   drawing=true;
   pushStyle();
   imageMode(CENTER);
   NokiaScreen.beginDraw();
   if (spritesLoaded==0) {
-    outString("Sprites Loading",32,0);  
+    outString("Sprites Loading", 32, 0);  
     status=STATUSINTRO;
   } else {
     //status=STATUSFLOOR;
   }
-  println(status);
+
+  //println("Status: "+status);
   switch (status) {
   case STATUSINTRO:
     maxX=1;
     maxY=1;
     waitKeyAny=true;
     drawIntro();
-    println("Drawing Intro");
+    //println("Drawing Intro");
     break;
   case STATUSFLOOR:
     waitKeyAny=false;
     maxX=32*8;
     maxY=8;
-    NokiaScreen.background(0);
-    println("Drawing floor");
-    drawFloor();
+    //println("Drawing floor");
+    drawFloor();    
     break;
   case STATUSDIALOG:
     case (STATUSDIALOG | STATUSFLOOR):
@@ -104,10 +110,14 @@ void draw() {
     maxY=1;
     dialog();
     break;
- default:
-   outString("STATUS is:"+status,0,32);
-}
-
+ case STATUSEXITGAME:
+    waitKeyAny=true;
+    maxX=1; maxY=1;
+    drawExit();
+    break;
+  default:
+    outString("STATUS is:"+status, 0, 32);
+  }
   //  outString(""+status,20,32);
   //centerString("Frame:"+frameCount,64/2,32,0);
   NokiaScreen.endDraw();
@@ -115,7 +125,7 @@ void draw() {
   image(NokiaScreen, width/2, height/2, nkw, nkh); 
   popStyle();
   drawing=false;
-  println (millis()-ti +" milliseconds per frame");
+  //  println (millis()-ti +" milliseconds per frame");
   //if (status==STATUSFLOOR) noLoop();
 }
 
@@ -124,6 +134,7 @@ void drawFloor() {
   int drawx;
   NokiaScreen.background(255, 255, 255, 255);
   int floorx=-myX;
+  println ("floorx:"+floorx);
   if (floorx<0) floorx+=8*32;
   for (int doorn=0; doorn<8; doorn++) {
     drawx=floorx+32*doorn;
@@ -131,25 +142,27 @@ void drawFloor() {
       drawx=drawx-8*32;
     }
     if (piso[myFloor][doorn].outImage!=null) {
-      println("door"+doorn+" at "+drawx);
+      //println("door"+doorn+" at "+drawx);
       if (drawx>=-60 && drawx<=84) { 
-        NokiaScreen.image(piso[myFloor][doorn].outImage, drawx, 0);    
+        NokiaScreen.image(piso[myFloor][doorn].outImage, drawx, 0);
+        //println("drawing image at ("+drawx+",0)");
         //println("Drawing floor x:"+(floorx*32+(myX % 32)));
         if (piso[myFloor][doorn].rtype==HSTAIRS) {
-          outString(""+myFloor, drawx+8, 0);
+          /* Add floor number to sprite */
+          outString(""+myFloor, drawx+10, 0);
         }
       } else {
-        println("drawx out of bounds:"+drawx);
+        //println("drawx out of bounds:"+drawx);
       }
     } else {
       println("piso["+myFloor+"]["+doorn+"].outImage is null");
       println("piso rtype:"+piso[myFloor][doorn].rtype);
     }
   }
-
   int selDoor=int(1+myX/32) % 8;
   if (piso[myFloor][selDoor].rtype==HSTAIRS) {
-    centerString(myFloor==0 ? "Go Up/Exit":"Go Up/Down", 42, 33, 0);
+    centerString(myFloor==0 ? "Go Up/Exit": 
+      (myFloor<7 ? "Go Up/Down" : "Go Down"), 42, 33, 0);
   } else {
     centerString(selDoor+":"+piso[myFloor][selDoor].name, 42, 33);
   }
@@ -157,12 +170,25 @@ void drawFloor() {
 
 void drawIntro() {
   NokiaScreen.stroke(0);
-  NokiaScreen.background(255);
   NokiaScreen.fill(255);
-  NokiaScreen.ellipse(84/2, 48/2, 40, 40);
+  if (spritesLoaded==0) {
+    NokiaScreen.background(0);
+    NokiaScreen.arc(84/2, 48/2, 40, 40, 0, filesLoaded*TWO_PI/40);
+  } else { 
+    NokiaScreen.background(255);
+    NokiaScreen.ellipse(84/2, 48/2, 40, 40);
+  }
   centerString("Doors", 84/2, 12);
   centerString("and", 84/2, 20);
   centerString("Drawers", 84/2, 28);
+}
+void drawExit(){
+  int points=0;
+NokiaScreen.fill(255);
+centerString("You came out",nkw/2,8);
+centerString("Points:"+points,nkw/2,16);
+centerString("Press any key",nkw/2,32);
+
 }
 
 void colorFilter() {
@@ -186,19 +212,21 @@ void colorFilter() {
 
 
 void keyPressed() {
-
   if (waitKeyAny|status==STATUSINTRO) {
     println("Any key Pressed"+status);
+    println("Sprites loaded:"+spritesLoaded);
     if (status==STATUSINTRO) status=STATUSFLOOR;
+    if (status==STATUSEXITGAME) exit();
+    println("Next Status"+status);
     return;
   }
-  println("Keypressed");
+  //println("Keypressed");
   if (key!=CODED) {
     /* CODED (ASCII) KEY USED */
     switch(key) {
     case 'W': 
     case 'w': 
-    case '8':
+    case '8':   
       doUp();
       break;
     case 'S': 
@@ -209,46 +237,59 @@ void keyPressed() {
     case 'A': 
     case 'a': 
     case '4':
+      println("LEFT");
       myX--;
-      while (myX<0) myX+=maxX;
-      println("myX=", myX);
+      /* If maxX==0 this causes infinite loop */
+      if (maxX>0) {
+        while (myX<0) myX+=maxX;
+      } else {
+        myX=0;
+      }
       break;
     case 'D': 
     case 'd': 
     case '6':
-      // 84/16=5.25
-      myX=(myX+1)%maxX;
-      println("myX=", myX);
+      //println("RIGHT, myX is "+myX+" and maxX is "+maxX);
+      if (maxX>0) myX=(myX+1) % maxX;
+      //println("Resulting myX:"+myX);
       break;
-    case ' ':
-    case RETURN:
-    case 5:
+    case ' ':    
+    case RETURN: 
+    case '5':
       /* SELECTION -- Decide what to do */
       if ( (status & STATUSDIALOG)!=0) dialogReturn();
       break;
-      case (char) 27:
-      /* ESCAPE */
+    case 27:      /* ESCAPE */
+      println("DoEscape()");
       doEscape();
     }
   } else {
     /* KEYCODE USED */
     switch(keyCode) {
-    case UP: 
+    case UP:
       doUp();
     case DOWN:
       // 48/16=3
       doDown();
       break;
     case LEFT:
+      println("LEFT");
       myX--;
-      while (myX<0) myX+=maxX;
+      /* If maxX==0 this causes infinite loop */
+      if (maxX>0) {
+        while (myX<0) myX+=maxX;
+      } else {
+        myX=0;
+      }
       break;
     case RIGHT:
+      //println("RIGHT");
       // 84/16=5.25
-      myX=(myX+1)%maxX;
+      if (maxX>0) myX=(myX+1)%maxX;
       break;
     case  4:
       /* BACK ANDRODID BUTTON: Exit form mode */
+      println("Android Back Button");
       doEscape();
       break;
     }
@@ -257,20 +298,25 @@ void keyPressed() {
 
 /* Processes "UP" key:*/
 void doUp() {
+  println("UP");
   if (status==STATUSFLOOR) {
     int selDoor=int(1+myX/32) % 8;
     if (piso[myFloor][selDoor].rtype==HSTAIRS) {
-      if (myFloor<8) {
+      if (myFloor<7) {
         myFloor++;
       }
     }
   } else {  
     myY--;
-    while (myY<0) myY+=maxY;
+    /* If maxY<0 this causes infinite loop */
+    if (maxY>0) {
+      while (myY<0) myY+=maxY;
+    }
   }
 }
 
 void doDown() {
+  println("DOWN");
   if (status==STATUSFLOOR) {
     int selDoor=int(1+myX/32) % 8;
     if (piso[myFloor][selDoor].rtype==HSTAIRS) {
@@ -286,11 +332,12 @@ void doDown() {
       }
     }
   } else {
-    myY=(myY+1)%maxY;
+    if (maxY>0) myY=(myY+1)%maxY;
   }
 }
 /* Process Escape. I.E. Exit from a Dialog */
 void doEscape() {
+  println("ESCAPE/EXIT/BACK");
   if ((status & STATUSDIALOG)!=0) {
     switch (status ^STATUSDIALOG) {
     case STATUSFLOOR:
@@ -305,6 +352,7 @@ void doEscape() {
 }
 
 void dialogReturn() {
+  println("RETURN");
   switch (dialognum) {
   case CONFIRM_EXIT:
     if (myX==0) {

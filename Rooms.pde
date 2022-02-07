@@ -43,18 +43,26 @@ PImage itemPen, itemClip, itemCup, itemDiskette1;
 PImage itemDiskette2, itemEnvelope, itemGasMask;
 PImage itemJar,itemPaper, itemTorch;  
 
+int filesLoaded=0; /* number of files loaded */
+
 void sprites(){
   spritesLoaded=0;
+  filesLoaded=0;
   //String path=dataPath(File.separator)+File.separator+"assets_rooms"+File.separator;
   String path="";
   doorOffice=loadImage(path+"office1.png");
- 
+ filesLoaded++;
   if (doorOffice==null) println("doorOffice not found");
   sprPadlock=loadImage(path+"Padlock.png");
+ filesLoaded++;
   doorStairs=loadImage(path+"Stairs.png");
+  filesLoaded++;
   doorToilet=loadImage(path+"Toilet.png");
+  filesLoaded++;
   doorKitchen=loadImage(path+"Kitchen.png");
+  filesLoaded++;
   doorLab=loadImage(path+"Lab.png");
+  filesLoaded++;
   doorLobby=loadImage(path+"Lobby.png");
   
   //String path=dataPath(File.separator)+File.separator+"assets_furniture"+File.separator;
@@ -62,56 +70,87 @@ void sprites(){
 
 /* Multi-purpose */
 furnDoor=loadImage(path+"door.png"); /* door seen from inside of room. 1Wx2H */
+filesLoaded++;
 furnBookcase=loadImage(path+"bookcase.png");  /* 1Wx2H */
+filesLoaded++;
 furnCabinetL=loadImage(path+"cabinetleft.png");  /* 1Wx1H */
+filesLoaded++;
 furnCabinetR=loadImage(path+"Cabinetright.png");  /* 1Wx1H */
+filesLoaded++;
 furnShelf=loadImage(path+"Shelf.png"); /* 1Wx1H */
+filesLoaded++;
 furnWardrobe=loadImage("wardrobe.png"); /* 1Wx2H */
-PImage furnFrameTmp;
-
+filesLoaded++;
 furnFrame.add(loadImage(path+"Frame1.png")); 
+filesLoaded++;
 furnFrame.add(loadImage(path+"Frame2.png"));
+filesLoaded++;
 furnFrame.add(loadImage(path+"Frame3.png"));
+filesLoaded++;
 furnFrame.add(loadImage(path+"Frame4.png"));
 
 /* Office and Special office */ 
 furnBigfile=loadImage(path+"bigfile.png"); /*1Wx2H*/
+filesLoaded++;
 furnMac=loadImage(path+"Mac-ll-ci.png"); /* 1Wx1H */
+filesLoaded++;
 furnPC=loadImage(path+"PC.png"); /* 1Wx1H */
+filesLoaded++;
 furnPhotocopier=loadImage(path+"Photocopier.png"); /* 2Wx1H */
+filesLoaded++;
 furnSafe=loadImage(path+"Safe.png"); /* 1Wx1H */
+filesLoaded++;
 furnTable=loadImage("Table.png"); /* 2Wx1H */
 
 /* Lobby */
 furnCoffeTable=loadImage(path+"coffeetable.png");  /* 1Wx1H */
+filesLoaded++;
 furnSofa=loadImage(path+"Sofa.png"); /* 2Wx1H */
+filesLoaded++;
+
 /* Kitchen */
 furnCoffeMachine=loadImage(path+"CoffeeMachine.png");  /* 1Wx1H */
+filesLoaded++;
 furnFridge=loadImage(path+"Fridge.png");  /* 1Wx2H */
+filesLoaded++;
 furnMicrowave=loadImage(path+"Microwave.png");  /* 1Wx1H */
+filesLoaded++;
 furnDrawer=loadImage(path+"drawer.png");  /* 1Wx1H */
+filesLoaded++;
 furnWC=loadImage(path+"WC.png");  /* 1Wx1H */
+filesLoaded++;
 furnTap=loadImage(path+"Tap.png");  /* 1Wx1H */
 
 
 /* Small Objects inside of furniture */
 itemKey.add(loadImage(path+"key1.png"));
+filesLoaded++;
 itemKey.add(loadImage(path+"key2.png"));
+filesLoaded++;
 itemKey.add(loadImage(path+"Key3.png"));
-
+filesLoaded++;
 itemPen=loadImage(path+"ballpen.png");  /* 1Wx1H */
+filesLoaded++;
 itemClip=loadImage(path+"clip.png");  /* 1Wx1H */
+filesLoaded++;
 itemCup=loadImage(path+"Cup.png");/* 1Wx1H */
+filesLoaded++;
 itemDiskette1=loadImage(path+"disketteMac.png"); /* 1Wx1H */
+filesLoaded++;
 itemDiskette2=loadImage(path+"diskettePcOld.png"); /* 1Wx1H */
+filesLoaded++;
 itemEnvelope=loadImage(path+"Envelope.png"); /* 1Wx1H */
+filesLoaded++;
 itemGasMask=loadImage(path+"GasMask.png"); /* 1Wx1H */
+filesLoaded++;
 itemJar=loadImage(path+"Jar.png"); /* 1Wx1H */
+filesLoaded++;
 itemPaper=loadImage(path+"Paper.png"); /* 1Wx1H */
+filesLoaded++;
 itemTorch=loadImage(path+"Torch.png"); /* 1Wx1H */
-
+filesLoaded++;
   
-  
+//println(filesLoaded+" files loaded.");
   spritesLoaded=1;
   println("All Sprites loaded");
 
