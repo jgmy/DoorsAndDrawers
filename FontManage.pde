@@ -11,7 +11,7 @@ void createPixelFont(){
   PImage FFont;
   //String path=dataPath("assets_fonts")+File.separator;
   String path="";
-  FFont=loadImage(path+File.separator+"nokia_font_dark_strip.png");
+  FFont=loadImage(path+"nokia_font_dark_strip.png");
   println(path+"nokia_font_dark_strip.png");
   Font=addAlpha(FFont);
  // println( stripOrder);

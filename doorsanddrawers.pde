@@ -1,8 +1,3 @@
-
-ESTO GENERA UN ERROR: 
-REVISA LOS WHILE DE myX y myY 
-en las rutinas de teclado.
-
 /* ******************************************
  * Doors and drawers
  * By José G Moya Y 
@@ -24,7 +19,7 @@ en las rutinas de teclado.
 final int[] NBLACKArr= {0x43, 0x52, 0x3d, 255};
 final int[] NWHITEArr= {0xc7, 0xf0, 0xd8, 255};
 /* But Java Processing uses unsigned 64 bit integers instead */
-final int NBLACK=0xff42523d;
+final int NBLACK=0xff43523d;
 final int NWHITE=0xffc7f0d8;
 
 int status; /* Chooses between screens */
@@ -71,11 +66,12 @@ void setup() {
   NokiaScreen.endDraw();
 }
 boolean drawing=false;
-
 int lastStatus=STATUSINTRO;
 void draw() {
   float ti;
+  
   if (status!=lastStatus) println("Status changed from "+lastStatus+" to "+status);
+  lastStatus=status;
   ti=millis();
   if (drawing) {
     println("Call to draw() while still drawing");
@@ -173,6 +169,10 @@ void drawFloor() {
   }
 }
 
+String strInstrucciones="Press any key"+
+    " - WASD / ARROWS / KEYPAD move"+
+    " - Find the secret Chorizo Paella recipe and escape building...";
+int textScrollx=0;
 void drawIntro() {
   NokiaScreen.stroke(0);
   NokiaScreen.fill(255);
@@ -186,7 +186,16 @@ void drawIntro() {
   centerString("Doors", 84/2, 12);
   centerString("and", 84/2, 20);
   centerString("Drawers", 84/2, 28);
+textScrollx++;
+outString(strInstrucciones,84-textScrollx,28,1);
+if (textScrollx> (strInstrucciones.length()*8+84)) textScrollx=0;
+// The scroll text seems to ve lighter, but you can try
+// this to show it is same color:
+//  if (textScrollx==84) noLoop();
 }
+
+
+
 void drawExit(){
   int points=0;
 NokiaScreen.fill(255);
@@ -267,12 +276,18 @@ void keyPressed() {
     case 27:      /* ESCAPE */
       println("DoEscape()");
       doEscape();
+      break;
+    default:
+      println("Key code: "+hex(key));
+      break;
     }
   } else {
     /* KEYCODE USED */
     switch(keyCode) {
     case UP:
+      println ("UP key");
       doUp();
+      break;
     case DOWN:
       // 48/16=3
       doDown();
@@ -296,6 +311,9 @@ void keyPressed() {
       /* BACK ANDRODID BUTTON: Exit form mode */
       println("Android Back Button");
       doEscape();
+      break;
+    default:
+      println("Keycode Pressed"+keyCode);
       break;
     }
   }
