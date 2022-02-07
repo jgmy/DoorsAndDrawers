@@ -1,3 +1,8 @@
+
+ESTO GENERA UN ERROR: 
+REVISA LOS WHILE DE myX y myY 
+en las rutinas de teclado.
+
 /* ******************************************
  * Doors and drawers
  * By José G Moya Y 
