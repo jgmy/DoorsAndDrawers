@@ -135,7 +135,7 @@ void drawFloor() {
   int drawx;
   NokiaScreen.background(255, 255, 255, 255);
   int floorx=-myX;
-  println ("floorx:"+floorx);
+  //println ("floorx:"+floorx);
   if (floorx<0) floorx+=8*32;
   for (int doorn=0; doorn<8; doorn++) {
     drawx=floorx+32*doorn;
@@ -187,7 +187,7 @@ void drawIntro() {
   centerString("and", 84/2, 20);
   centerString("Drawers", 84/2, 28);
 textScrollx++;
-outString(strInstrucciones,84-textScrollx,28,1);
+outString(strInstrucciones,84-textScrollx,36,1);
 if (textScrollx> (strInstrucciones.length()*8+84)) textScrollx=0;
 // The scroll text seems to ve lighter, but you can try
 // this to show it is same color:
