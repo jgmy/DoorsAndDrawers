@@ -41,7 +41,7 @@ int nkbuffsize;
 int myY=0, myX=0, storeFloorX=0;
 int maxX=8, maxY=4;
 int myFloor=0;
-
+int myRoom=0;
 boolean waitKeyAny= true; /* wait for any key */
 void setup() {
   fullScreen();
@@ -69,7 +69,7 @@ boolean drawing=false;
 int lastStatus=STATUSINTRO;
 void draw() {
   float ti;
-  
+
   if (status!=lastStatus) println("Status changed from "+lastStatus+" to "+status);
   lastStatus=status;
   ti=millis();
@@ -111,10 +111,18 @@ void draw() {
     maxY=1;
     dialog();
     break;
- case STATUSEXITGAME:
+  case STATUSEXITGAME:
     waitKeyAny=true;
-    maxX=1; maxY=1;
+    maxX=1; 
+    maxY=1;
     drawExit();
+    break;
+  case STATUSROOM:
+    
+    waitKeyAny=true;
+    maxX=1;
+    maxY=1;
+    piso[myFloor][myRoom].show();
     break;
   default:
     outString("STATUS is:"+status, 0, 32);
@@ -160,18 +168,22 @@ void drawFloor() {
       println("piso rtype:"+piso[myFloor][doorn].rtype);
     }
   }
-  int selDoor=int(1+myX/32) % 8;
-  if (piso[myFloor][selDoor].rtype==HSTAIRS) {
+  
+  // We used selDoor before to show selected door, but
+  // we should change active Room instead.
+  myRoom=int(1+myX/32) % 8;
+    
+  if (piso[myFloor][myRoom].rtype==HSTAIRS) {
     centerString(myFloor==0 ? "Go Up/Exit": 
       (myFloor<7 ? "Go Up/Down" : "Go Down"), 42, 33, 0);
   } else {
-    centerString(selDoor+":"+piso[myFloor][selDoor].name, 42, 33);
+    centerString(myRoom+":"+piso[myFloor][myRoom].name, 42, 33);
   }
 }
 
 String strInstrucciones="Press any key"+
-    " - WASD / ARROWS / KEYPAD move"+
-    " - Find the secret Chorizo Paella recipe and escape building...";
+  " - WASD / ARROWS / KEYPAD move"+
+  " - Find the secret Chorizo Paella recipe and escape building...";
 int textScrollx=0;
 void drawIntro() {
   NokiaScreen.stroke(0);
@@ -186,23 +198,22 @@ void drawIntro() {
   centerString("Doors", 84/2, 12);
   centerString("and", 84/2, 20);
   centerString("Drawers", 84/2, 28);
-textScrollx++;
-outString(strInstrucciones,84-textScrollx,36,1);
-if (textScrollx> (strInstrucciones.length()*8+84)) textScrollx=0;
-// The scroll text seems to ve lighter, but you can try
-// this to show it is same color:
-//  if (textScrollx==84) noLoop();
+  textScrollx++;
+  outString(strInstrucciones, 84-textScrollx, 36, 1);
+  if (textScrollx> (strInstrucciones.length()*8+84)) textScrollx=0;
+  // The scroll text seems to ve lighter, but you can try
+  // this to show it is same color:
+  //  if (textScrollx==84) noLoop();
 }
 
 
 
-void drawExit(){
+void drawExit() {
   int points=0;
-NokiaScreen.fill(255);
-centerString("You came out",nkw/2,8);
-centerString("Points:"+points,nkw/2,16);
-centerString("Press any key",nkw/2,32);
-
+  NokiaScreen.fill(255);
+  centerString("You came out", nkw/2, 8);
+  centerString("Points:"+points, nkw/2, 16);
+  centerString("Press any key", nkw/2, 32);
 }
 
 void colorFilter() {
@@ -230,7 +241,12 @@ void keyPressed() {
     println("Any key Pressed"+status);
     println("Sprites loaded:"+spritesLoaded);
     if (status==STATUSINTRO) status=STATUSFLOOR;
-    if (status==STATUSEXITGAME) exit();
+    else if (status==STATUSROOM) 
+    {
+      status=STATUSFLOOR;
+      myX=((myRoom % 8))*32;  
+    }
+    else if (status==STATUSEXITGAME) exit();
     println("Next Status"+status);
     return;
   }
@@ -251,7 +267,7 @@ void keyPressed() {
     case 'A': 
     case 'a': 
     case '4':
-      println("LEFT");
+      //println("LEFT");
       myX--;
       /* If maxX==0 this causes infinite loop */
       if (maxX>0) {
@@ -271,7 +287,15 @@ void keyPressed() {
     case RETURN: 
     case '5':
       /* SELECTION -- Decide what to do */
-      if ( (status & STATUSDIALOG)!=0) dialogReturn();
+      if ( (status & STATUSDIALOG)!=0) {
+        dialogReturn(); 
+        break;
+      } else if ( status==STATUSFLOOR) {
+        myRoom=int(1+myX/32) % 8;
+        if (piso[myFloor][myRoom].rtype==HKITCHEN) {
+          status=STATUSROOM;
+        }
+      }
       break;
     case 27:      /* ESCAPE */
       println("DoEscape()");
@@ -293,7 +317,7 @@ void keyPressed() {
       doDown();
       break;
     case LEFT:
-      println("LEFT");
+      //println("LEFT");
       myX--;
       /* If maxX==0 this causes infinite loop */
       if (maxX>0) {
@@ -321,7 +345,7 @@ void keyPressed() {
 
 /* Processes "UP" key:*/
 void doUp() {
-  println("UP");
+  //println("UP");
   if (status==STATUSFLOOR) {
     int selDoor=int(1+myX/32) % 8;
     if (piso[myFloor][selDoor].rtype==HSTAIRS) {
@@ -339,7 +363,7 @@ void doUp() {
 }
 
 void doDown() {
-  println("DOWN");
+  //println("DOWN");
   if (status==STATUSFLOOR) {
     int selDoor=int(1+myX/32) % 8;
     if (piso[myFloor][selDoor].rtype==HSTAIRS) {

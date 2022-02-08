@@ -1,4 +1,4 @@
-import java.io.*;
+import java.io.*; //<>// //<>//
 
 final int HLOBBY=0;
 final int HOFFICE=1;
@@ -30,13 +30,13 @@ PImage furnShelf;
 PImage furnWardrobe;
 
 String[] labFridgeNames={
-  "Fresh blood","Don't open",
-  "Biohazard","Corpses"
+  "Fresh blood", "Don't open", 
+  "Biohazard", "Corpses"
 };
 String[]  WCFunnyNames={
-   "WC","seat","A Throne of Games",
-   "poopatorium", "oval office","commode"
- };
+  "WC", "seat", "A Throne of Games", 
+  "poopatorium", "oval office", "commode"
+};
 ArrayList <namedImage> furnFrame=new ArrayList <namedImage>();
 /* Office and Special office furniture*/
 PImage furnBigFile, furnMac, furnPC;
@@ -237,6 +237,8 @@ class Room {
   // 84/16=5 (five spaces)
   Furniture[][] furniture=new Furniture[2][5];
   Room(int tipo) {
+    this.locked=false;
+    this.key=0;
     this.rtype=tipo;
     /* All rooms have a door */
     this.doorAt=int(random(5));
@@ -273,15 +275,9 @@ class Room {
     case HKITCHEN:
       name="kitchen";
       outImage=doorKitchen;
-       makeKitchen();
-        for (int fky=0; fky<2; fky++) {
-          String Kit="";
-        for (int fkx=0; fkx<5; fkx++) {
-          Kit+="["+nfp(safeGetFurn(fkx, fky), 2)+"]";
-        }
-        println(Kit);
-      }
-      
+      makeKitchen();
+      displayTextRoom();
+
       break;
 
     case HTOILET:
@@ -294,10 +290,7 @@ class Room {
       break;
     }
 
-    this.locked=false;
-    this.key=0;
-    this.furniture=new Furniture[3][5];
-  }
+ }
   void makeKitchen() {
     println("Making kitchen");
     /* A kitchen contains:
@@ -311,7 +304,7 @@ class Room {
         println("("+fx+","+fy+")");
         if ( (doorAt!=fx) && this.emptyPlace(fx, fy)) {
           int choose=int(random(20));
-    
+
           switch (choose) {
           case 0:
             /*FRIDGE - 2 columns */
@@ -344,7 +337,7 @@ class Room {
             break;
           case 3: 
           case 4: /*FURNDRAWER */
-          println("Drawer at ("+fx+","+fy+")");
+            println("Drawer at ("+fx+","+fy+")");
             furniture[fy][fx]=new Furniture(this, FURNDRAWER);
             break;
           case 5: 
@@ -353,11 +346,11 @@ class Room {
             furniture[fy][fx]=new Furniture(this, FURNCABINET);
             break;
           case 7:
-            if (fy==0){
-                println("Shelf at ("+fx+","+fy+")");
-                furniture[fy][fx]=new Furniture(this, FURNSHELF);
+            if (fy==0) {
+              println("Shelf at ("+fx+","+fy+")");
+              furniture[fy][fx]=new Furniture(this, FURNSHELF);
             }
-            break;  
+            break;
           }
         }
       }
@@ -371,13 +364,13 @@ class Room {
     if (furniture[cy][cx].ftype==FURNSEELEFT) return safeGetFurn(cx-1, cy);
     return furniture[cy][cx].ftype;
   }
-  
+
   Furniture safeGetFurnObject(int cx, int cy) {
-    if (cx>=5 | cx<0) return new Furniture (this,FURNINVALID);
-    if (cy<0 | cy>1) return new Furniture (this,FURNINVALID);
-    if (furniture[cy][cx]==null) return new Furniture (this,FURNINVALID);
-    if (furniture[cy][cx].ftype==FURNSEEUP) return safeGetFurnObject(int cx, int cy);
-    if (furniture[cy][cx].ftype==FURNSEELEFT) return safeGetFurnObject(int cx, int cy);
+    if (cx>=5 | cx<0) return new Furniture (this, FURNINVALID);
+    if (cy<0 | cy>1) return new Furniture (this, FURNINVALID);
+    if (furniture[cy][cx]==null) return new Furniture (this, FURNINVALID);
+    if (furniture[cy][cx].ftype==FURNSEEUP) return safeGetFurnObject(cx, cy);
+    if (furniture[cy][cx].ftype==FURNSEELEFT) return safeGetFurnObject( cx, cy);
     return furniture[cy][cx];
   }
   boolean safetest(int cx, int cy, int furntype) {
@@ -402,11 +395,45 @@ class Room {
   }
   boolean emptyPlace(int cx, int cy) {
     if (this.furniture[cy][cx]!=null) {
-      if (this.furniture[cy][cx].ftype!=FURNINVALID) { //<>//
-        return false; //<>//
+      if (this.furniture[cy][cx].ftype!=FURNINVALID) {
+        return false;
       }
     } 
     return true;
+  }
+  void show() {
+    NokiaScreen.background(255);  
+    for (int cy=0; cy<2; cy++) {
+      for (int cx=0; cx<5; cx++) {
+        if (this.furniture[cy][cx]!=null) {
+          switch (this.furniture[cy][cx].ftype) {
+          case FURNINVALID:
+          case FURNSEELEFT:
+          case FURNSEEUP:
+            /* do nothing */
+            break;
+          default:
+            if (this.furniture[cy][cx].image!=null) {
+              NokiaScreen.image(this.furniture[cy][cx].image, cx*16, cy*16);
+            } else {
+             // println("NULL image:"+this.furniture[cy][cx].name);
+            }
+            break;
+          }
+        } else {
+          // println ("Null at"+cx+","+cy);
+        }
+      }
+    }
+  }
+  void displayTextRoom() {
+    for (int fky=0; fky<2; fky++) {
+      String Kit="";
+      for (int fkx=0; fkx<5; fkx++) {
+        Kit+="["+nfp(safeGetFurn(fkx, fky), 2)+"]";
+      }
+      println(Kit);
+    }
   }
 };
 
@@ -418,7 +445,7 @@ class Furniture {
   public Item[] items[];
   public Room parentRoom;
   public int ftype; /* furniture type */
-    public PImage image;
+  public PImage image;
   public String name;
   Furniture(Room parentRoom) {
     container=false;
@@ -498,7 +525,7 @@ class Furniture {
     case FURNCOFFEETABLE:  
       this.name="Coffee table";
       this.image=furnCoffeeTable;
-        break;
+      break;
     case FURNSOFA:  
       this.name="Restplace";
       this.image=furnSofa;
