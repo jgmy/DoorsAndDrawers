@@ -48,6 +48,7 @@ int myRoom=0;
 boolean waitKeyAny= true; /* wait for any key */
 void setup() {
   fullScreen();
+//size(840,480);
   noSmooth();
   NokiaScreen=createGraphics(84, 48);
   scale=int(min(width/84, height/48));
@@ -138,9 +139,11 @@ void draw() {
   colorFilter();
   image(NokiaScreen, width/2, height/2, nkw, nkh); 
   popStyle();
+// saveFrame("recording-"+nf(frameCount)+".png");
   drawing=false;
   //  println (millis()-ti +" milliseconds per frame");
   //if (status==STATUSFLOOR) noLoop();
+
 }
 
 /* Draw a floor, with scrolling */
