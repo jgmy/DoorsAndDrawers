@@ -259,6 +259,8 @@ class Room {
         this.rtype=HOFFICELAB;
         name="laboratory";
         outImage=doorLab;
+        makeLab();
+        displayTextRoom();
         break;
       case 2:
         this.rtype=HOFFICEBOSS;
@@ -276,7 +278,7 @@ class Room {
       name="kitchen";
       outImage=doorKitchen;
       makeKitchen();
-      displayTextRoom();
+      //displayTextRoom();
 
       break;
 
@@ -289,8 +291,7 @@ class Room {
       outImage=doorStairs;
       break;
     }
-
- }
+  }
   void makeKitchen() {
     println("Making kitchen");
     /* A kitchen contains:
@@ -337,8 +338,23 @@ class Room {
             break;
           case 3: 
           case 4: /*FURNDRAWER */
+            // Make drawer at [0][fx] if there is drawer at [1][fx]
             println("Drawer at ("+fx+","+fy+")");
-            furniture[fy][fx]=new Furniture(this, FURNDRAWER);
+            if (fy==0) {
+              /* Drawers from the floor */
+              furniture[fy][fx]=new Furniture(this, FURNDRAWER);
+            } else {
+              /* Drawers should be on top of another object */
+              switch (safeGetFurn(fx, fy-1)) {                
+              case FURNCABINET:
+              case FURNFAKEFRAME:
+              case FURNFRAME:
+              case FURNSAFE:
+              case FURNDRAWER:
+                furniture[fy][fx]=new Furniture(this, FURNDRAWER);
+                break;
+              }
+            }
             break;
           case 5: 
           case 6:
@@ -346,6 +362,102 @@ class Room {
             furniture[fy][fx]=new Furniture(this, FURNCABINET);
             break;
           case 7:
+            if (fy==0) {
+              println("Shelf at ("+fx+","+fy+")");
+              furniture[fy][fx]=new Furniture(this, FURNSHELF);
+            }
+            break;
+          }
+        }
+      }
+    }
+  }
+  void makeLab() {
+    println("Making lab");
+    /* A lab  contains:
+     maybe a fridge
+     some drawers, cabinets
+     maybe bookcases
+     PC or MAC
+     (a microscope if I make the sprite);
+     */
+    for (int fy=1; fy>-1; fy--) {
+      for (int fx=0; fx<5; fx++) {
+        /* ensure not to overwrite door */
+        println("("+fx+","+fy+")");
+        if ( (doorAt!=fx) && this.emptyPlace(fx, fy)) {
+          int choose=int(random(20));
+
+          switch (choose) {
+          case 0:
+            /*FRIDGE - 2 columns */
+            /* check entire column */
+            if (emptyColumn(fx) ) {
+              println("Fridge at"+"("+fx+","+0+")");
+              furniture[0][fx]=new Furniture(this, FURNFRIDGE);
+              furniture[1][fx]=new Furniture(this, FURNSEEUP);
+            }
+            break;
+          case 1: 
+          case 2:
+          case 3:
+            /* FURNPC or FURNMAC on [fx][0]
+            /* iff [fx][0] is empty and */
+            /* [fx][1]=FURNDRAWER or FURNCABINET or empty  */
+            /* makes empty drawer if [fx][1] empty */
+            if (emptyColumn(fx) ) {
+              println("Microwave or Coffee at ("+fx+","+0+") on top of makeshift furniture");
+              furniture[0][fx]=new Furniture(this, (choose==1 ? FURNPC : FURNMAC));
+              switch (int (random(3))) {
+              case 0:
+                furniture[1][fx]=new Furniture(this, (FURNCABINET)); 
+                break;
+              case 1:
+                furniture[1][fx]=new Furniture(this, (FURNDRAWER)); 
+                break;
+              case 2: 
+                furniture[1][fx]=new Furniture(this, (FURNBOOKCASE)); 
+                break;
+              }
+            } else {
+              if (emptyPlace(fx, fy) ) {
+                if (safetest(1, fx, FURNCABINET) || safetest (1, fx, FURNDRAWER)) {
+                  println("Microwave or Coffee at ("+fx+","+0+") on top of existing furniture");
+                  furniture[0][fx]=new Furniture(this, (choose==1 ? FURNMICROWAVE : FURNCOFFEE));
+                }
+              }
+            }
+            break;
+          case 4: 
+          case 5: /*FURNDRAWER */
+            // Make drawer at [0][fx] if there is drawer at [1][fx]
+            println("Drawer at ("+fx+","+fy+")");
+            if (fy==0) {
+              /* Drawers from the floor */
+              furniture[fy][fx]=new Furniture(this, FURNDRAWER);
+            } else {
+              /* Drawers should be on top of another object */
+              switch (safeGetFurn(fx, fy-1)) {                
+              case FURNCABINET:
+              case FURNFAKEFRAME:
+              case FURNFRAME:
+              case FURNSAFE:
+              case FURNDRAWER:
+                furniture[fy][fx]=new Furniture(this, FURNDRAWER);
+                break;
+              }
+            }
+            break;
+          case 6: 
+          case 7:
+            println("Cabinet at ("+fx+","+fy+")");
+            furniture[fy][fx]=new Furniture(this, FURNCABINET);
+            break;
+          case 8:
+            println("Cabinet at ("+fx+","+fy+")");
+            furniture[fy][fx]=new Furniture(this, FURNBOOKCASE);
+            break;
+          case 9:
             if (fy==0) {
               println("Shelf at ("+fx+","+fy+")");
               furniture[fy][fx]=new Furniture(this, FURNSHELF);
@@ -416,7 +528,7 @@ class Room {
             if (this.furniture[cy][cx].image!=null) {
               NokiaScreen.image(this.furniture[cy][cx].image, cx*16, cy*16);
             } else {
-             // println("NULL image:"+this.furniture[cy][cx].name);
+              // println("NULL image:"+this.furniture[cy][cx].name);
             }
             break;
           }

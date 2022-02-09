@@ -292,7 +292,8 @@ void keyPressed() {
         break;
       } else if ( status==STATUSFLOOR) {
         myRoom=int(1+myX/32) % 8;
-        if (piso[myFloor][myRoom].rtype==HKITCHEN) {
+        if (piso[myFloor][myRoom].rtype==HKITCHEN | 
+            piso[myFloor][myRoom].rtype==HOFFICELAB) {
           status=STATUSROOM;
         }
       }
