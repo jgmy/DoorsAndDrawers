@@ -1,4 +1,4 @@
-import java.io.*; //<>// //<>//
+import java.io.*; //<>// //<>// //<>// //<>//
 
 final int HLOBBY=0;
 final int HOFFICE=1;
@@ -14,6 +14,9 @@ int[] distribucion={HLOBBY,
 IntList dist;
 Room[][] piso=new Room[8][8];
 int spritesLoaded=0;
+int roomsGenerated=0;
+
+PImage sprHand;
 PImage sprPadlock;
 PImage doorOffice;
 PImage doorStairs;
@@ -28,7 +31,9 @@ PImage furnCabinetL;
 PImage furnCabinetR;
 PImage furnShelf;
 PImage furnWardrobe;
-
+PImage furnLabTable;
+PImage furnMicroscope;
+PImage furnLamp;
 String[] labFridgeNames={
   "Fresh blood", "Don't open", 
   "Biohazard", "Corpses"
@@ -46,7 +51,7 @@ PImage furnPhotocopier, furnSafe, furnTable;
 PImage furnCoffeeTable, furnSofa;
 /* Kitchen */
 PImage furnCoffeeMachine, furnFridge, furnMicrowave;
-PImage furnDrawer, furnWC, furnTap;
+PImage furnDrawer, furnWC, furnTap, furnMirror;
 
 
 /* Small Objects inside of furniture */
@@ -78,8 +83,11 @@ final int FURNMICROWAVE=18;
 final int FURNDRAWER=19;
 final int FURNWC=20;
 final int FURNTAP=21;
-
-
+/* LAST ADDED */
+final int FURNMICROSCOPE=22;
+final int FURNLABTABLE=23;
+final int FURNLAMP=24;
+final int FURNMIRROR=25;
 int filesLoaded=0; /* number of files loaded */
 
 class namedImage {
@@ -94,8 +102,12 @@ class namedImage {
 void sprites() {
   spritesLoaded=0;
   filesLoaded=0;
+
+  sprHand=loadImage("hand.png");
+  filesLoaded++;
   //String path=dataPath(File.separator)+File.separator+"assets_rooms"+File.separator;
   String path="";
+
   doorOffice=loadImage(path+"office1.png");
   filesLoaded++;
   if (doorOffice==null) println("doorOffice not found");
@@ -166,6 +178,14 @@ void sprites() {
   furnWC=loadImage(path+"WC.png");  /* 1Wx1H */
   filesLoaded++;
   furnTap=loadImage(path+"Tap.png");  /* 1Wx1H */
+  furnMicroscope=loadImage(path+"Microscope.png");
+  filesLoaded++;  
+  furnLabTable=loadImage(path+"Labtable.png");
+  filesLoaded++;
+  furnLamp=loadImage(path+"Lamp.png");
+  filesLoaded++;
+  furnMirror=loadImage(path+"Mirror.png");
+
 
 
   /* Small Objects inside of furniture */
@@ -197,11 +217,12 @@ void sprites() {
   filesLoaded++;
 
   //println(filesLoaded+" files loaded.");
-  spritesLoaded=1;
+
   println("All Sprites loaded");
-
-
+  spritesLoaded=1;
   iniciaPisos();
+  println("Pisos Iniciados");
+  spritesLoaded=2;
 }
 void iniciaPisos() {
   dist=new IntList();
@@ -219,13 +240,22 @@ void iniciaPisos() {
       } else {
         piso[f][g]=new Room(dist.get(g));
       }
+      roomsGenerated++;
       debugString=debugString+"["+(piso[f][g].name+"    ").substring(0, 6)+"]";
     }
     println(debugString);
   }
 }
-
-
+final int[] MICROWAVEorCOFFEE={FURNMICROWAVE, FURNCOFFEE};
+final int[] DRAWERorCABINET={FURNDRAWER, FURNCABINET};
+final int[] DRAWERorCABINETorSAFE={FURNDRAWER, FURNCABINET, FURNSAFE, FURNFAKEFRAME};
+final int[] SOLIDBOTTOM={FURNDRAWER, FURNCABINET, FURNSAFE, 
+  FURNFAKEFRAME, FURNTABLE, FURNLABTABLE};
+final int[] SOLIDBOTTOMEXTRA={FURNDRAWER, FURNCABINET, FURNSAFE, 
+  FURNFAKEFRAME, FURNTABLE, FURNLABTABLE, FURNBOOKCASE};
+final int[] UNDERDRAWER={FURNCABINET, FURNFAKEFRAME, FURNSAFE, FURNDRAWER};
+final int[] PCorMAC={FURNPC, FURNMAC};
+final int[] UNDERSCOPE={FURNCABINET, FURNDRAWER, FURNBOOKCASE};
 class Room {
   public String name;
   public PImage outImage;
@@ -233,6 +263,7 @@ class Room {
   public int key;
   public int rtype;
   public int doorAt=-1;
+  public int background;
   // 48/16=3 (down, top, space for text)
   // 84/16=5 (five spaces)
   Furniture[][] furniture=new Furniture[2][5];
@@ -240,6 +271,8 @@ class Room {
     this.locked=false;
     this.key=0;
     this.rtype=tipo;
+    this.background=int(random(4));
+    ;
     /* All rooms have a door */
     this.doorAt=int(random(5));
     furniture[0][doorAt]=new Furniture(this, FURNDOOR);
@@ -248,12 +281,16 @@ class Room {
     case HLOBBY:
       name="lobby";
       outImage=doorLobby;
+      makeLobby();
       break;    
     case HOFFICE:
+    default:
       switch (int(random(10))) {
       default:
         name="office";
         outImage=doorOffice;
+        makeOffice();
+        displayTextRoom();
         break;
       case 1:
         this.rtype=HOFFICELAB;
@@ -266,11 +303,16 @@ class Room {
         this.rtype=HOFFICEBOSS;
         name="executive";
         outImage=doorOffice;
+        makeBossOffice();
+        makeOffice();
+        displayTextRoom();
         break;
       case 3:
         this.rtype=HOFFICEREPRO;
         name="reprographic";
         outImage=doorOffice;
+        makeReproOffice();
+        displayTextRoom();
         break;
       }
       break;
@@ -279,12 +321,11 @@ class Room {
       outImage=doorKitchen;
       makeKitchen();
       //displayTextRoom();
-
       break;
-
     case HTOILET:
       name="toilet";
       outImage=doorToilet;
+      makeToilet();
       break;
     case HSTAIRS:
       name="stairs";
@@ -293,7 +334,7 @@ class Room {
     }
   }
   void makeKitchen() {
-    println("Making kitchen");
+    //println("Making kitchen");
     /* A kitchen contains:
      maybe a fridge
      some drawers
@@ -305,55 +346,25 @@ class Room {
         println("("+fx+","+fy+")");
         if ( (doorAt!=fx) && this.emptyPlace(fx, fy)) {
           int choose=int(random(20));
-
           switch (choose) {
           case 0:
             /*FRIDGE - 2 columns */
             /* check entire column */
-            if (emptyColumn(fx) ) {
-              println("Fridge at"+"("+fx+","+0+")");
-              furniture[0][fx]=new Furniture(this, FURNFRIDGE);
-              furniture[1][fx]=new Furniture(this, FURNSEEUP);
-            }
+            placeTallFurniture(fx, fy, FURNFRIDGE);
             break;
           case 1: 
           case 2:
-            /*FURNMICROWAVE or FURNCOFFEE on [fx][0]
-            /* iff [fx][0] is empty and */
-            /* [fx][1]=FURNDRAWER or FURNCABINET or empty  */
-            /* makes empty drawer if [fx][1] empty */
-            if (emptyColumn(fx) ) {
-              println("Microwave or Coffee at ("+fx+","+0+") on top of makeshift furniture");
-              furniture[0][fx]=new Furniture(this, (choose==1 ? FURNMICROWAVE : FURNCOFFEE));
-              int rnd2=int (random(10) % 2);
-              furniture[1][fx]=new Furniture(this, (rnd2==1 ? FURNCABINET : FURNDRAWER));
-            } else {
-              if (emptyPlace(fx, fy) ) {
-                if (safetest(1, fx, FURNCABINET) || safetest (1, fx, FURNDRAWER)) {
-                  println("Microwave or Coffee at ("+fx+","+0+") on top of existing furniture");
-                  furniture[0][fx]=new Furniture(this, (choose==1 ? FURNMICROWAVE : FURNCOFFEE));
-                }
-              }
-            }
+            onTopOf(fx, fy, MICROWAVEorCOFFEE, DRAWERorCABINET);
             break;
           case 3: 
           case 4: /*FURNDRAWER */
             // Make drawer at [0][fx] if there is drawer at [1][fx]
             println("Drawer at ("+fx+","+fy+")");
-            if (fy==0) {
-              /* Drawers from the floor */
+            if (fy==1) {
+              /* Drawers at floor level */
               furniture[fy][fx]=new Furniture(this, FURNDRAWER);
             } else {
-              /* Drawers should be on top of another object */
-              switch (safeGetFurn(fx, fy-1)) {                
-              case FURNCABINET:
-              case FURNFAKEFRAME:
-              case FURNFRAME:
-              case FURNSAFE:
-              case FURNDRAWER:
-                furniture[fy][fx]=new Furniture(this, FURNDRAWER);
-                break;
-              }
+              onTopOf(fx, fy, FURNDRAWER, UNDERDRAWER);
             }
             break;
           case 5: 
@@ -372,8 +383,77 @@ class Room {
       }
     }
   }
+  void makeLobby() {
+    //println("Making lobby");
+    /* A lobby  contains:
+     probably a sofa and/or coffee table
+     maybe bookcases or shelves
+     */
+    for (int fy=1; fy>-1; fy--) {
+      for (int fx=0; fx<5; fx++) {
+        /* ensure not to overwrite door */
+        println("("+fx+","+fy+")");
+        if ( (doorAt!=fx) && this.emptyPlace(fx, fy)) {
+          int choose=int(random(20));
+          switch (choose) {
+          case 0:
+            /*Wardrobe - 2 rows */
+            placeTallFurniture(fx, fy, FURNWARDROBE);
+            break;
+          case 1: 
+          case 2:
+          case 3:
+            /* SOFA */
+            placeTwoSlots(fx, 1, FURNSOFA);
+            break;
+          case 4:
+          case 5: /*FURNCOFFEETABLE */
+            if (fx==0) {
+              furniture[fx][fy]=new Furniture(this, FURNCOFFEETABLE);
+            }
+            break;
+
+          case 6: 
+            if (fy==1) {
+              furniture[fy][fx]=new Furniture(this, (int(random(10))==1) ? FURNFAKEFRAME: FURNFRAME);
+            }
+            break;
+          case 7:
+            furniture[fy][fx]=new Furniture(this, FURNBOOKCASE);
+            break;
+          case 8:
+            if (fy==0) {
+              furniture[fy][fx]=new Furniture(this, FURNSHELF);
+            }
+            break;
+          }
+        }
+      }
+    }
+  }
+  void makeToilet() {
+    for (int f=0; f<5; f++) {
+      int rnd=int(random(10));
+      if (emptyPlace(f, 1)) {
+        switch (rnd) {
+        case 1: 
+        case 2: 
+        case 3:
+          this.furniture[1][f]=new Furniture(this, FURNWC);
+          break;
+        case 4: 
+        case 5: 
+        case 6: 
+        case 7: 
+          this.furniture[1][f]=new Furniture(this, FURNTAP);
+          if (emptyPlace(f, 0) ) this.furniture[0][f]=new Furniture(this, FURNMIRROR);
+          break;
+        }
+      }
+    }
+  }
   void makeLab() {
-    println("Making lab");
+    //println("Making lab");
     /* A lab  contains:
      maybe a fridge
      some drawers, cabinets
@@ -392,48 +472,31 @@ class Room {
           case 0:
             /*FRIDGE - 2 columns */
             /* check entire column */
-            if (emptyColumn(fx) ) {
-              println("Fridge at"+"("+fx+","+0+")");
-              furniture[0][fx]=new Furniture(this, FURNFRIDGE);
-              furniture[1][fx]=new Furniture(this, FURNSEEUP);
-            }
+            placeTallFurniture(fx, fy, FURNFRIDGE);
             break;
           case 1: 
           case 2:
-          case 3:
-            /* FURNPC or FURNMAC on [fx][0]
-            /* iff [fx][0] is empty and */
-            /* [fx][1]=FURNDRAWER or FURNCABINET or empty  */
-            /* makes empty drawer if [fx][1] empty */
-            if (emptyColumn(fx) ) {
-              println("Microwave or Coffee at ("+fx+","+0+") on top of makeshift furniture");
-              furniture[0][fx]=new Furniture(this, (choose==1 ? FURNPC : FURNMAC));
-              switch (int (random(3))) {
-              case 0:
-                furniture[1][fx]=new Furniture(this, (FURNCABINET)); 
-                break;
-              case 1:
-                furniture[1][fx]=new Furniture(this, (FURNDRAWER)); 
-                break;
-              case 2: 
-                furniture[1][fx]=new Furniture(this, (FURNBOOKCASE)); 
-                break;
-              }
-            } else {
-              if (emptyPlace(fx, fy) ) {
-                if (safetest(1, fx, FURNCABINET) || safetest (1, fx, FURNDRAWER)) {
-                  println("Microwave or Coffee at ("+fx+","+0+") on top of existing furniture");
-                  furniture[0][fx]=new Furniture(this, (choose==1 ? FURNMICROWAVE : FURNCOFFEE));
-                }
+            /* LAB TABLE */
+            if (fy==1) {
+              if ((fx<4) && emptyPlace(fx, 1) && emptyPlace(fx+1, 1)) {
+                furniture[1][fx]=new Furniture(this, FURNLABTABLE);
+                furniture[1][fx]=new Furniture(this, FURNSEELEFT);
+              } else if ((fx>1) && emptyPlace(fx, 1) && emptyPlace(fx-1, 1)) 
+              {
+                furniture[1][fx]=new Furniture(this, FURNLABTABLE);
+                furniture[1][fx]=new Furniture(this, FURNSEELEFT);
               }
             }
+            break;
+          case 3:
+            onTopOf(fx, fy, PCorMAC, DRAWERorCABINET, SOLIDBOTTOM);
             break;
           case 4: 
           case 5: /*FURNDRAWER */
             // Make drawer at [0][fx] if there is drawer at [1][fx]
             println("Drawer at ("+fx+","+fy+")");
-            if (fy==0) {
-              /* Drawers from the floor */
+            if (fy==1) {
+              /* Drawers at floor level */
               furniture[fy][fx]=new Furniture(this, FURNDRAWER);
             } else {
               /* Drawers should be on top of another object */
@@ -450,24 +513,221 @@ class Room {
             break;
           case 6: 
           case 7:
-            println("Cabinet at ("+fx+","+fy+")");
             furniture[fy][fx]=new Furniture(this, FURNCABINET);
             break;
           case 8:
-            println("Cabinet at ("+fx+","+fy+")");
             furniture[fy][fx]=new Furniture(this, FURNBOOKCASE);
             break;
           case 9:
             if (fy==0) {
-              println("Shelf at ("+fx+","+fy+")");
               furniture[fy][fx]=new Furniture(this, FURNSHELF);
             }
+            break;
+          case 10:
+            /* MICROSCOPE */
+            onTopOf(fx, fy, FURNMICROSCOPE, UNDERSCOPE, SOLIDBOTTOMEXTRA
+              );
             break;
           }
         }
       }
     }
   }
+
+  void makeReproOffice() {
+    int rx; /* random x and y */
+    /* Compulsory copier */
+    int copiers=1+int(random(2));
+    for (int f=0; f<copiers; f++) {
+      rx=int(random(4));
+      placeTwoSlots(rx, 1, FURNPHOTOCOPIER);
+    }
+    /* High chance of having drawers or lockers */
+    for (rx=0; rx<5; rx++) {
+      if (emptyPlace(rx, 1)) {
+        switch (int (random(3))) {
+        case 0:
+          this.furniture[1][rx]=new Furniture(this, FURNDRAWER);
+        case 1:
+          this.furniture[1][rx]=new Furniture(this, FURNCABINET);
+        }
+      }
+    }
+  }
+  void makeBossOffice() {
+    int rx, ry; /* random x and y */
+    /* Compulsory table */
+    rx=int(random(4));
+    placeTwoSlots(rx, 1, FURNTABLE);
+    /*compulsory computer */
+    for (int tries=0; tries<5; tries++) {
+      if (emptyPlace(rx, 0)) {
+        onTopOf(rx, 0, PCorMAC, DRAWERorCABINET, SOLIDBOTTOM);
+      }
+      if (safeTest(rx, 0, FURNPC) || safeTest(rx, 0, FURNMAC ) )break;
+      rx=(rx+1) % 4;
+    }
+    /* Compulsory picture and probable FAKEFRAME */
+    for (int tries=0; tries<10; tries++) {
+      rx=int(random(5));
+      ry=int(random(2));
+      if (emptyPlace(rx, ry)) {
+        this.furniture[ry][rx]=
+          new Furniture(this, int(random(5))==1? FURNFAKEFRAME : FURNFRAME);
+        break;
+      }
+    }
+    int pictureNumber=int(random(3));
+    /* There is a chance for the boss to have its place 
+     full of pictures, even at floor level
+     */
+    for (int tries=0; tries<pictureNumber; tries++) {
+      rx=int(random(5));
+      ry=int(random(2));
+      if (emptyPlace(rx, ry)) {
+        this.furniture[ry][rx]=
+          new Furniture( this, int(random(5))==1? FURNFAKEFRAME : FURNFRAME);
+        break;
+      }
+    }
+  }
+  void makeOffice() {
+    //println("Making Office");
+    /* An office  contains:
+     table
+     some drawers, cabinets
+     maybe bookcases
+     PC or MAC
+     */
+    for (int fy=1; fy>-1; fy--) {
+      for (int fx=0; fx<5; fx++) {
+        /* ensure not to overwrite door */
+        println("("+fx+","+fy+")");
+        if ( (doorAt!=fx) && this.emptyPlace(fx, fy)) {
+          int choose=int(random(20));
+
+          switch (choose) {
+          case 0:
+            placeTallFurniture(fx, fy, FURNBIGFILE);
+            break;
+          case 1: 
+          case 2: 
+          case 3:
+            /* TABLE */
+            placeTwoSlots(fx, 1, FURNTABLE);
+            break;
+          case 4:
+            /* if possible, add a furntable */
+            /* (This checks for emptiness of fx,1) */
+            placeTwoSlots(fx, 1, FURNTABLE);
+            /* Then add a PC or MAC */
+            onTopOf(fx, fy, PCorMAC, DRAWERorCABINET, SOLIDBOTTOM);
+            break;
+          case 5: 
+          case 6: /*FURNDRAWER */
+            // Make drawer at [0][fx] if there is drawer at [1][fx]
+            if (fy==1) {
+              /* Drawers at floor level */
+              furniture[fy][fx]=new Furniture(this, FURNDRAWER);
+            } else {
+              final int[] arrayofdrawers={FURNDRAWER};
+              onTopOf(fx, fy, FURNDRAWER, arrayofdrawers, SOLIDBOTTOM);
+            }
+            break;
+          case 7: 
+          case 8:
+            furniture[fy][fx]=new Furniture(this, FURNCABINET);
+            break;
+          case 9:
+            furniture[fy][fx]=new Furniture(this, FURNBOOKCASE);
+            break;
+          case 10:
+            if (fy==0) {
+              furniture[fy][fx]=new Furniture(this, FURNSHELF);
+            }
+            break;
+          case 11:
+            onTopOf(fx, fy, FURNLAMP, UNDERSCOPE, SOLIDBOTTOM);
+            break;
+          case 12:
+            placeTallFurniture(fx, fy, FURNWARDROBE);
+          }
+        }
+      }
+    }
+  }
+  /* Place 2-rows furniture */
+  void placeTallFurniture(int cx, int cy, int ftype) {
+    /* check entire column */
+    if (emptyColumn(cx) ) {
+      println("Tall furn "+ftype+" at "+"("+cx+","+0+")");
+      furniture[0][cx]=new Furniture(this, ftype);
+      furniture[1][cx]=new Furniture(this, FURNSEEUP);
+    }
+  }
+  void placeTwoSlots(int cx, int cy, int ftype) {
+    if ((cx<4) && emptyPlace(cx, cy) && emptyPlace(cx+1, cy)) {
+      furniture[cy][cx]=new Furniture(this, ftype);
+      furniture[cy][cx+1]=new Furniture(this, FURNSEELEFT);
+    } else if ((cx>1) && emptyPlace(cx, cy) && emptyPlace(cx-1, cy)) 
+    {
+      furniture[cy][cx]=new Furniture(this, ftype);
+      furniture[cy][cx]=new Furniture(this, FURNSEELEFT);
+    }
+  }
+
+  /* Place topftype on top of bottomftype                    */
+  /* iff [fx][0] is empty and [fx][1]=bottomftype[] or empty  */
+  /* (makes emptyftype  if [fx][1] empty)                    */
+  void onTopOf(int cx, int cy, int[] topftype, int[] bottomftype, int[] extraftype) {
+    int[] bottomextra;
+    if (cx<0|cx>4|cy<0|cy>1) return;
+    if (topftype==null || bottomftype==null) return;
+    if (topftype.length==0) return;
+    if (extraftype==null||extraftype.length==0) {
+      bottomextra=concat(bottomftype, extraftype);
+    } else {
+      bottomextra=extraftype;
+    }
+    int randomftype=topftype[int(random(topftype.length))];
+    if (bottomftype.length>0 && emptyColumn(cx) ) {
+
+      println(randomftype+" at ("+cx+","+0+") on top of makeshift furniture");
+      furniture[0][cx]=new Furniture(this, randomftype);
+      int randombottom=bottomftype[int(random(bottomftype.length))];
+      furniture[1][cx]=new Furniture(this, randombottom);
+    } else if (emptyPlace(cx, 0) ) {
+      boolean passes=false;
+      for (int i=0; i<bottomextra.length; i++) {
+        if (safeTest(1, cx, bottomextra[i])) {
+          passes=true;
+          break;
+        }
+        if (passes) {
+          furniture[0][cx]=new Furniture(this, randomftype);
+          println(randomftype+" at ("+cx+","+0+") on top of existing furniture");
+        }
+      }
+    }
+  }
+  void onTopOf(int cx, int cy, int topftype, int[] bottomftype, int[] extraftype) {
+    int[] oneitemarray={0};
+    oneitemarray[0]=topftype;
+    onTopOf(cx, cy, oneitemarray, bottomftype, extraftype);
+  }
+  void onTopOf(int cx, int cy, int[] topftype, int[] bottomftype) {
+    final int[] zeroitemarray={};
+    onTopOf(cx, cy, topftype, bottomftype, zeroitemarray);
+  }
+  void onTopOf(int cx, int cy, int topftype, int[] bottomftype ) {
+    int[] oneitemarray={0};
+    final int[] zeroitemarray={};
+    oneitemarray[0]=topftype;
+    onTopOf(cx, cy, oneitemarray, bottomftype, zeroitemarray);
+  }
+
+
+  /* Safely get furniture type at (cx,cy)*/
   int safeGetFurn(int cx, int cy) {
     if (cx>=5 | cx<0) return FURNINVALID;
     if (cy<0 | cy>1) return FURNINVALID;
@@ -477,6 +737,7 @@ class Room {
     return furniture[cy][cx].ftype;
   }
 
+  /* Safely get actual Furniture object at (cx,cy) */
   Furniture safeGetFurnObject(int cx, int cy) {
     if (cx>=5 | cx<0) return new Furniture (this, FURNINVALID);
     if (cy<0 | cy>1) return new Furniture (this, FURNINVALID);
@@ -485,13 +746,26 @@ class Room {
     if (furniture[cy][cx].ftype==FURNSEELEFT) return safeGetFurnObject( cx, cy);
     return furniture[cy][cx];
   }
-  boolean safetest(int cx, int cy, int furntype) {
+
+  /* Safely get if furntype at (cx,cy) is furntype */
+  boolean safeTest(int cx, int cy, int furntype) {
     if (cx>=5 | cx<0) return false;
     if (cy<0 | cy>1) return false;
-    if (furniture[cy][cx]==null) return false;
+    if (furniture[cy][cx]==null) return false; 
     if (furniture[cy][cx].ftype==furntype) return true;
+    /* Añadido. No sé si puede causar problemas (es posible
+     que inicialmente quitase esta función a propósito) */
+    if (furniture[cy][cx].ftype==FURNSEELEFT && cx>0) {
+      if (furniture[cy][cx-1].ftype==furntype) return true;
+    }
+    if (furniture[cy][cx].ftype==FURNSEEUP && cy>0) {
+      if (furniture[cy-1][cx].ftype==furntype) return true;
+    }
+
     return false;
   }
+
+  /* Is this column empty? */
   boolean emptyColumn(int cx) {
     boolean empty=true;        
     if (cx>=5 | cx<0) return true;
@@ -514,7 +788,8 @@ class Room {
     return true;
   }
   void show() {
-    NokiaScreen.background(255);  
+    NokiaScreen.background(255);
+    Pattern(this.background);
     for (int cy=0; cy<2; cy++) {
       for (int cx=0; cx<5; cx++) {
         if (this.furniture[cy][cx]!=null) {
@@ -547,7 +822,36 @@ class Room {
       println(Kit);
     }
   }
-};
+}
+
+void Pattern(int num) {
+  NokiaScreen.pushStyle();
+  switch(num) {
+    default:
+    NokiaScreen.background(255);
+    break;
+  case 1:
+    NokiaScreen.fill(0);
+    NokiaScreen.rect(0,0,84,32);
+    break;
+  case 2:
+    NokiaScreen.background(255);
+    for (int f=0; f<84; f+=5) NokiaScreen.line(f, 0, f, 32);
+    for (int f=32; f>=0; f-=5) NokiaScreen.line(0, f, 84, f);
+    break;
+  case 3:
+    NokiaScreen.background(255);
+    for (int f=0; f<32; f+=2) NokiaScreen.line(0, f, 84, f);
+    break;
+  case 4:
+    NokiaScreen.background(255);
+    for (int f=0; f<84; f+=2) NokiaScreen.line(f, 20, f, 32);
+    break;
+  
+  }  
+
+  NokiaScreen.popStyle();
+}
 
 class Furniture {
   public boolean container=false;
@@ -668,6 +972,22 @@ class Furniture {
     case FURNTAP:  
       this.name="Tap";
       this.image=furnTap;
+      break;
+    case FURNLABTABLE:
+      this.name="Table";
+      this.image= furnLabTable;
+      break;
+    case FURNMICROSCOPE:
+      this.name="Microscope";
+      this.image=furnMicroscope;
+      break;
+    case FURNLAMP:
+      this.name="Lamp";
+      this.image=furnLamp;
+      break;
+    case FURNMIRROR:
+      this.name="Mirror, mirror";
+      this.image=furnMirror;
       break;
     }
   }

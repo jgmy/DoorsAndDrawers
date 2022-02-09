@@ -15,6 +15,7 @@
  * tried before using other programming engines.
  ***************************************** */
 
+
 /* In p5js I would use these: */
 final int[] NBLACKArr= {0x43, 0x52, 0x3d, 255};
 final int[] NWHITEArr= {0xc7, 0xf0, 0xd8, 255};
@@ -22,6 +23,8 @@ final int[] NWHITEArr= {0xc7, 0xf0, 0xd8, 255};
 final int NBLACK=0xff43523d;
 final int NWHITE=0xffc7f0d8;
 
+final int NUMBEROFFILES=40;
+final int NUMBEROFROOMS=8*8;
 int status; /* Chooses between screens */
 final int STATUSINTRO=0;
 final int STATUSFLOOR=2;
@@ -81,8 +84,10 @@ void draw() {
   pushStyle();
   imageMode(CENTER);
   NokiaScreen.beginDraw();
-  if (spritesLoaded==0) {
-    outString("Sprites Loading", 32, 0);  
+  if (spritesLoaded<2) {
+    outString(
+      spritesLoaded==1 ? "Loading Sprites" : "Generating Rooms", 
+      32, 0);  
     status=STATUSINTRO;
   } else {
     //status=STATUSFLOOR;
@@ -118,7 +123,7 @@ void draw() {
     drawExit();
     break;
   case STATUSROOM:
-    
+
     waitKeyAny=true;
     maxX=1;
     maxY=1;
@@ -150,7 +155,7 @@ void drawFloor() {
     while (drawx>7*32) {
       drawx=drawx-8*32;
     }
-    if (piso[myFloor][doorn].outImage!=null) {
+    if (piso[myFloor][doorn]!=null && piso[myFloor][doorn].outImage!=null) {
       //println("door"+doorn+" at "+drawx);
       if (drawx>=-60 && drawx<=84) { 
         NokiaScreen.image(piso[myFloor][doorn].outImage, drawx, 0);
@@ -168,11 +173,11 @@ void drawFloor() {
       println("piso rtype:"+piso[myFloor][doorn].rtype);
     }
   }
-  
+
   // We used selDoor before to show selected door, but
   // we should change active Room instead.
   myRoom=int(1+myX/32) % 8;
-    
+
   if (piso[myFloor][myRoom].rtype==HSTAIRS) {
     centerString(myFloor==0 ? "Go Up/Exit": 
       (myFloor<7 ? "Go Up/Down" : "Go Down"), 42, 33, 0);
@@ -190,7 +195,7 @@ void drawIntro() {
   NokiaScreen.fill(255);
   if (spritesLoaded==0) {
     NokiaScreen.background(0);
-    NokiaScreen.arc(84/2, 48/2, 40, 40, 0, filesLoaded*TWO_PI/40);
+    NokiaScreen.arc(84/2, 48/2, 40, 40, 0, (roomsGenerated+filesLoaded)*TWO_PI/(NUMBEROFFILES+NUMBEROFROOMS));
   } else { 
     NokiaScreen.background(255);
     NokiaScreen.ellipse(84/2, 48/2, 40, 40);
@@ -244,9 +249,8 @@ void keyPressed() {
     else if (status==STATUSROOM) 
     {
       status=STATUSFLOOR;
-      myX=((myRoom % 8))*32;  
-    }
-    else if (status==STATUSEXITGAME) exit();
+      myX=((7+myRoom) % 8)*32;
+    } else if (status==STATUSEXITGAME) exit();
     println("Next Status"+status);
     return;
   }
@@ -293,7 +297,12 @@ void keyPressed() {
       } else if ( status==STATUSFLOOR) {
         myRoom=int(1+myX/32) % 8;
         if (piso[myFloor][myRoom].rtype==HKITCHEN | 
-            piso[myFloor][myRoom].rtype==HOFFICELAB) {
+          piso[myFloor][myRoom].rtype==HTOILET|
+          piso[myFloor][myRoom].rtype==HOFFICE |
+          piso[myFloor][myRoom].rtype==HOFFICEBOSS |
+          piso[myFloor][myRoom].rtype==HOFFICEREPRO |
+          piso[myFloor][myRoom].rtype==HOFFICELAB |
+          piso[myFloor][myRoom].rtype==HLOBBY ) {
           status=STATUSROOM;
         }
       }
@@ -353,6 +362,16 @@ void doUp() {
       if (myFloor<7) {
         myFloor++;
       }
+    } else if (piso[myFloor][myRoom].rtype==HKITCHEN | 
+          piso[myFloor][myRoom].rtype==HTOILET|
+          piso[myFloor][myRoom].rtype==HOFFICE |
+          piso[myFloor][myRoom].rtype==HOFFICEBOSS |
+          piso[myFloor][myRoom].rtype==HOFFICEREPRO |
+          piso[myFloor][myRoom].rtype==HOFFICELAB |
+          piso[myFloor][myRoom].rtype==HLOBBY ) {
+        myRoom=int(1+myX/32) % 8;
+        
+        status=STATUSROOM;
     }
   } else {  
     myY--;
