@@ -257,6 +257,7 @@ final int[] UNDERDRAWER={FURNCABINET, FURNFAKEFRAME, FURNSAFE, FURNDRAWER};
 final int[] PCorMAC={FURNPC, FURNMAC};
 final int[] UNDERSCOPE={FURNCABINET, FURNDRAWER, FURNBOOKCASE};
 class Room {
+  
   public String name;
   public PImage outImage;
   public boolean locked;
@@ -727,8 +728,8 @@ class Room {
   }
 
 
-  /* Safely get furniture type at (cx,cy)*/
-  int safeGetFurn(int cx, int cy) {
+  /* Safely get furniture type at (cx,cy) OLD RECURSIVE VERSION*/
+  int safeGetFurnRecursive(int cx, int cy) {
     if (cx>=5 | cx<0) return FURNINVALID;
     if (cy<0 | cy>1) return FURNINVALID;
     if (furniture[cy][cx]==null) return FURNINVALID;
@@ -737,13 +738,37 @@ class Room {
     return furniture[cy][cx].ftype;
   }
 
+  /* Safely get furniture type at (cx,cy) NEW NONRECURSIVE VERSION*/
+  int safeGetFurn(int cx, int cy) {
+    int tries=5;
+    /* this should loop twice at most, but we will give 5 tries */
+    while (tries>0) {
+      if (cx>=5 | cx<0) return FURNINVALID;
+      if (cy<0 | cy>1) return FURNINVALID;
+      if (furniture[cy][cx]==null) return FURNINVALID;
+      switch  (furniture[cy][cx].ftype) {
+      case FURNSEEUP: 
+        cy--; 
+        break;
+      case FURNSEELEFT:
+        cx--;
+        break;
+      default:
+        return furniture[cy][cx].ftype;
+      }
+      tries--;
+    }
+    return FURNINVALID;
+  }
+final private Furniture dummyInvalid=new Furniture(this,FURNINVALID);
   /* Safely get actual Furniture object at (cx,cy) */
   Furniture safeGetFurnObject(int cx, int cy) {
-    if (cx>=5 | cx<0) return new Furniture (this, FURNINVALID);
-    if (cy<0 | cy>1) return new Furniture (this, FURNINVALID);
-    if (furniture[cy][cx]==null) return new Furniture (this, FURNINVALID);
-    if (furniture[cy][cx].ftype==FURNSEEUP) return safeGetFurnObject(cx, cy);
-    if (furniture[cy][cx].ftype==FURNSEELEFT) return safeGetFurnObject( cx, cy);
+    
+    if (cx>=5 | cx<0) return dummyInvalid;
+    if (cy<0 | cy>1) return dummyInvalid;
+    if (furniture[cy][cx]==null) return dummyInvalid;
+    if (furniture[cy][cx].ftype==FURNSEEUP) return safeGetFurnObject(cx, cy-1);
+    if (furniture[cy][cx].ftype==FURNSEELEFT) return safeGetFurnObject( cx-1, cy);
     return furniture[cy][cx];
   }
 
@@ -827,12 +852,12 @@ class Room {
 void Pattern(int num) {
   NokiaScreen.pushStyle();
   switch(num) {
-    default:
+  default:
     NokiaScreen.background(255);
     break;
   case 1:
     NokiaScreen.fill(0);
-    NokiaScreen.rect(0,0,84,32);
+    NokiaScreen.rect(0, 0, 84, 32);
     break;
   case 2:
     NokiaScreen.background(255);
@@ -847,7 +872,6 @@ void Pattern(int num) {
     NokiaScreen.background(255);
     for (int f=0; f<84; f+=2) NokiaScreen.line(f, 20, f, 32);
     break;
-  
   }  
 
   NokiaScreen.popStyle();

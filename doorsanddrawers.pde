@@ -48,7 +48,7 @@ int myRoom=0;
 boolean waitKeyAny= true; /* wait for any key */
 void setup() {
   fullScreen();
-//size(840,480);
+  //size(840,480);
   noSmooth();
   NokiaScreen=createGraphics(84, 48);
   scale=int(min(width/84, height/48));
@@ -125,10 +125,10 @@ void draw() {
     break;
   case STATUSROOM:
 
-    waitKeyAny=true;
-    maxX=1;
-    maxY=1;
-    piso[myFloor][myRoom].show();
+    waitKeyAny=false;
+    maxX=8;
+    maxY=3;
+    drawRoom();
     break;
   default:
     outString("STATUS is:"+status, 0, 32);
@@ -139,11 +139,10 @@ void draw() {
   colorFilter();
   image(NokiaScreen, width/2, height/2, nkw, nkh); 
   popStyle();
-// saveFrame("recording-"+nf(frameCount)+".png");
+  // saveFrame("recording-"+nf(frameCount)+".png");
   drawing=false;
   //  println (millis()-ti +" milliseconds per frame");
   //if (status==STATUSFLOOR) noLoop();
-
 }
 
 /* Draw a floor, with scrolling */
@@ -298,16 +297,9 @@ void keyPressed() {
         dialogReturn(); 
         break;
       } else if ( status==STATUSFLOOR) {
-        myRoom=int(1+myX/32) % 8;
-        if (piso[myFloor][myRoom].rtype==HKITCHEN | 
-          piso[myFloor][myRoom].rtype==HTOILET|
-          piso[myFloor][myRoom].rtype==HOFFICE |
-          piso[myFloor][myRoom].rtype==HOFFICEBOSS |
-          piso[myFloor][myRoom].rtype==HOFFICEREPRO |
-          piso[myFloor][myRoom].rtype==HOFFICELAB |
-          piso[myFloor][myRoom].rtype==HLOBBY ) {
-          status=STATUSROOM;
-        }
+        enterRoom();
+      } else if (status==STATUSROOM){
+        exitRoom();
       }
       break;
     case 27:      /* ESCAPE */
@@ -365,16 +357,8 @@ void doUp() {
       if (myFloor<7) {
         myFloor++;
       }
-    } else if (piso[myFloor][myRoom].rtype==HKITCHEN | 
-          piso[myFloor][myRoom].rtype==HTOILET|
-          piso[myFloor][myRoom].rtype==HOFFICE |
-          piso[myFloor][myRoom].rtype==HOFFICEBOSS |
-          piso[myFloor][myRoom].rtype==HOFFICEREPRO |
-          piso[myFloor][myRoom].rtype==HOFFICELAB |
-          piso[myFloor][myRoom].rtype==HLOBBY ) {
-        myRoom=int(1+myX/32) % 8;
-        
-        status=STATUSROOM;
+    } else {
+      enterRoom();
     }
   } else {  
     myY--;
@@ -436,5 +420,50 @@ void dialogReturn() {
       }
     }
     break;
+  }
+}
+
+/* Does the check to enter a room and adjusts values
+ *
+ * Moved from the keypressed function to avoid having 
+ * to mantain different copies for "SELECT" (5/SPACE) and "UP"
+ */
+void enterRoom() {
+  myRoom=int(1+myX/32) % 8;
+  if (piso[myFloor][myRoom].rtype==HKITCHEN | 
+    piso[myFloor][myRoom].rtype==HTOILET|
+    piso[myFloor][myRoom].rtype==HOFFICE |
+    piso[myFloor][myRoom].rtype==HOFFICEBOSS |
+    piso[myFloor][myRoom].rtype==HOFFICEREPRO |
+    piso[myFloor][myRoom].rtype==HOFFICELAB |
+    piso[myFloor][myRoom].rtype==HLOBBY ) {
+    myX=2;
+    myY=1;
+    status=STATUSROOM;
+  }
+}
+void exitRoom() {
+  if (status==STATUSROOM) {
+    if (myX<5 && myX>=0 && myY<2 && myY>=0) {
+      /* 
+      println("piso["+myFloor+"]["+myRoom+"]"+
+      ".safeGetFurn("+myX+","+ myY+")="+
+      piso[myFloor][myRoom].safeGetFurn(myX, myY));
+      */
+      switch (piso[myFloor][myRoom].safeGetFurn(myX, myY)) {
+        case FURNINVALID:
+        /* this allow to use default: for real furniture */
+          break;
+        case FURNDOOR:
+          myX=((7+myRoom) % 8)*32;
+          status=STATUSFLOOR;
+          break;
+        case FURNFAKEFRAME:
+          /* reveal fake frames */
+          Furniture furn=piso[myFloor][myRoom].safeGetFurnObject(myX, myY);
+          if (furn!=null) furn.image=furnSafe;
+          break;
+      }
+    }
   }
 }
