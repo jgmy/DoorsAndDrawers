@@ -872,6 +872,20 @@ void Pattern(int num) {
     NokiaScreen.background(255);
     for (int f=0; f<84; f+=2) NokiaScreen.line(f, 20, f, 32);
     break;
+  case 5:
+    // Polka dots
+     NokiaScreen.background(255);
+     final int R=8; 
+     final int halfR=4;
+     final float ang=HALF_PI/3;
+    for (int fy=0;fy<(48/halfR);fy++){
+      for (int fx=0;fx<(84/halfR);fx++){
+      float plus=R*(fx%2)*sin(ang);
+      NokiaScreen.ellipse(fx*R*cos(ang),
+        fy*2*R*sin(ang) +plus,
+        R/4,R/4);
+    }
+  }
   }  
 
   NokiaScreen.popStyle();
