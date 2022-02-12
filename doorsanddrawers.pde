@@ -35,6 +35,7 @@ final int STATUSEXITGAME=5; /* after confirming exit building */
 int dialognum; /* Chooses between Dialogs */
 
 final int CONFIRM_EXIT=1;
+final int DIALOG_INFO=0;
 
 PGraphics NokiaScreen;  
 int scale=1; /* sreen resize scale*/
@@ -42,6 +43,9 @@ int nkw=0;
 int nkh=0;
 int nkbuffsize;
 int myY=0, myX=0, storeFloorX=0;
+int storeRoomX=0, storeRoomY=0;
+int[] passwordknown={0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+int[] keyhold={0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 int maxX=8, maxY=4;
 int myFloor=0;
 int myRoom=0;
@@ -112,10 +116,18 @@ void draw() {
     break;
   case STATUSDIALOG:
     case (STATUSDIALOG | STATUSFLOOR):
-    waitKeyAny=false;
-    maxX=2;
-    maxY=1;
-    dialog();
+    if (dialognum==CONFIRM_EXIT) { 
+      waitKeyAny=false;
+      maxX=2;
+      maxY=1;
+      dialogExitConfirm();
+    }
+    break;
+  case STATUSDIALOG | STATUSROOM:
+    if (dialognum==DIALOG_INFO) {
+      waitKeyAny=true;
+      dialogMessage();
+    }
     break;
   case STATUSEXITGAME:
     waitKeyAny=true;
@@ -188,10 +200,11 @@ void drawFloor() {
   }
 }
 
-String strInstrucciones="Press any key"+
+String[] strInstrucciones={"Loading Sprites", "Generating rooms", "Press any key"+
   " - WASD / ARROWS / KEYPAD move"+
-  " - Find the secret Chorizo Paella recipe and escape building...";
+  " - Find the secret Chorizo Paella recipe and escape building..."};
 int textScrollx=0;
+
 void drawIntro() {
   NokiaScreen.stroke(0);
   NokiaScreen.fill(255);
@@ -206,8 +219,8 @@ void drawIntro() {
   centerString("and", 84/2, 20);
   centerString("Drawers", 84/2, 28);
   textScrollx++;
-  outString(strInstrucciones, 84-textScrollx, 36, 1);
-  if (textScrollx> (strInstrucciones.length()*8+84)) textScrollx=0;
+  outString(strInstrucciones[spritesLoaded], 84-textScrollx, 36, 1);
+  if (textScrollx> (strInstrucciones[spritesLoaded].length()*8+84)) textScrollx=0;
   // The scroll text seems to ve lighter, but you can try
   // this to show it is same color:
   //  if (textScrollx==84) noLoop();
@@ -255,7 +268,11 @@ void keyPressed() {
     } else if (status==STATUSEXITGAME) exit();
     println("Next Status"+status);
     return;
+  } else if (status==(STATUSDIALOG | STATUSROOM)) {
+    myX=storeRoomX;
+    myY=storeRoomY;
   }
+
   //println("Keypressed");
   if (key!=CODED) {
     /* CODED (ASCII) KEY USED */
@@ -298,8 +315,11 @@ void keyPressed() {
         break;
       } else if ( status==STATUSFLOOR) {
         enterRoom();
-      } else if (status==STATUSROOM){
-        exitRoom();
+      } else if (status==STATUSROOM) {
+        actionRoom();
+      } else if (status==(STATUSROOM | STATUSDIALOG)) {
+        storeRoomX=myX;
+        storeRoomY=myY;
       }
       break;
     case 27:      /* ESCAPE */
@@ -399,6 +419,9 @@ void doEscape() {
       status^=STATUSDIALOG;
       if (status==STATUSFLOOR) {
         myX=storeFloorX;
+      } else if (status==STATUSROOM) {
+        myX=storeRoomX;
+        myY=storeRoomY;
       }
       break;
     }
@@ -419,6 +442,18 @@ void dialogReturn() {
         myX=storeFloorX;
       }
     }
+    break;
+  case DIALOG_INFO:
+    status^=STATUSDIALOG;
+    switch (status) {
+    case STATUSFLOOR:
+      myX=storeFloorX;
+      break;
+    case STATUSROOM:
+      myX=storeRoomX;
+      myY=storeRoomY;
+      break;
+    } 
     break;
   }
 }
@@ -442,27 +477,27 @@ void enterRoom() {
     status=STATUSROOM;
   }
 }
-void exitRoom() {
+void actionRoom() {
   if (status==STATUSROOM) {
     if (myX<5 && myX>=0 && myY<2 && myY>=0) {
       /* 
-      println("piso["+myFloor+"]["+myRoom+"]"+
-      ".safeGetFurn("+myX+","+ myY+")="+
-      piso[myFloor][myRoom].safeGetFurn(myX, myY));
-      */
+       println("piso["+myFloor+"]["+myRoom+"]"+
+       ".safeGetFurn("+myX+","+ myY+")="+
+       piso[myFloor][myRoom].safeGetFurn(myX, myY));
+       */
       switch (piso[myFloor][myRoom].safeGetFurn(myX, myY)) {
-        case FURNINVALID:
+      case FURNINVALID:
         /* this allow to use default: for real furniture */
-          break;
-        case FURNDOOR:
-          myX=((7+myRoom) % 8)*32;
-          status=STATUSFLOOR;
-          break;
-        case FURNFAKEFRAME:
-          /* reveal fake frames */
-          Furniture furn=piso[myFloor][myRoom].safeGetFurnObject(myX, myY);
-          if (furn!=null) furn.image=furnSafe;
-          break;
+        break;
+      case FURNDOOR:
+        myX=((7+myRoom) % 8)*32;
+        status=STATUSFLOOR;
+        break;
+      case FURNFAKEFRAME:
+        /* reveal fake frames */
+        Furniture furn=piso[myFloor][myRoom].safeGetFurnObject(myX, myY);
+        if (furn!=null) furn.image=furnSafe;
+        break;
       }
     }
   }

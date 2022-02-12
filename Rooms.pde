@@ -8,11 +8,14 @@ final int HSTAIRS=4;
 final int HOFFICELAB=5;
 final int HOFFICEBOSS=6;
 final int HOFFICEREPRO=7;
+final int HSELF=99;
 int[] distribucion={HLOBBY, 
   HOFFICE, HOFFICE, HOFFICE, HOFFICE, 
   HOFFICE, HKITCHEN, HTOILET};
 IntList dist;
 Room[][] piso=new Room[8][8];
+
+Inventory inventory;
 int spritesLoaded=0;
 int roomsGenerated=0;
 
@@ -56,9 +59,13 @@ PImage furnDrawer, furnWC, furnTap, furnMirror;
 
 /* Small Objects inside of furniture */
 ArrayList <PImage> itemKey=new ArrayList <PImage>();
-PImage itemPen, itemClip, itemCup, itemDiskette1;
-PImage itemDiskette2, itemEnvelope, itemGasMask;
+PImage itemClip, itemCup, itemEnvelope, itemGasMask;
 PImage itemJar, itemPaper, itemTorch;  
+PImage itemBackpack, itemPen;
+PImage itemDiskettemac;
+PImage itemDiskettepcold;
+
+
 final int FURNSEEUP=-1; /* EMPTY furniture slot occupied by furniture at top*/
 final int FURNSEELEFT=-2; /* EMPTY furniture slot occupied by furniture at left*/
 final int FURNINVALID=0;
@@ -72,7 +79,7 @@ final int FURNFAKEFRAME=7;
 final int FURNBIGFILE=8;
 final int FURNMAC=9;
 final int FURNPC=10;
-final int FURNPHOTOCOPIER=11;
+final int FURNCOPIER=11;
 final int FURNSAFE=12; /* see also FURNFAKEFRAME */
 final int FURNTABLE=13;
 final int FURNCOFFEETABLE=14;
@@ -88,7 +95,22 @@ final int FURNMICROSCOPE=22;
 final int FURNLABTABLE=23;
 final int FURNLAMP=24;
 final int FURNMIRROR=25;
+final int FURNINVENTORY=99;
 int filesLoaded=0; /* number of files loaded */
+final int ITEMBACKPACK = 1;
+final int ITEMPEN = 2;
+final int ITEMCLIP = 3;
+final int ITEMCUP = 4;
+final int ITEMDISKETTEMAC = 5;
+final int ITEMDISKETTEPCOLD = 6;
+final int ITEMENVELOPE = 7;
+final int ITEMGASMASK = 9;
+final int ITEMKEY=10;
+final int ITEMMAP=11;
+final int ITEMPASSWORD=12;
+final int ITEMPAPER = 15;
+final int ITEMPHOTOCOPIER = 16;
+final int ITEMTORCH = 17;
 
 class namedImage {
   PImage image;
@@ -201,9 +223,9 @@ void sprites() {
   filesLoaded++;
   itemCup=loadImage(path+"Cup.png");/* 1Wx1H */
   filesLoaded++;
-  itemDiskette1=loadImage(path+"disketteMac.png"); /* 1Wx1H */
+  itemDiskettemac=loadImage(path+"disketteMac.png"); /* 1Wx1H */
   filesLoaded++;
-  itemDiskette2=loadImage(path+"diskettePcOld.png"); /* 1Wx1H */
+  itemDiskettepcold=loadImage(path+"diskettePcOld.png"); /* 1Wx1H */
   filesLoaded++;
   itemEnvelope=loadImage(path+"Envelope.png"); /* 1Wx1H */
   filesLoaded++;
@@ -215,6 +237,11 @@ void sprites() {
   filesLoaded++;
   itemTorch=loadImage(path+"Torch.png"); /* 1Wx1H */
   filesLoaded++;
+  itemBackpack =loadImage("");
+  filesLoaded++;
+  itemPaper=loadImage("");
+  filesLoaded++;
+
 
   //println(filesLoaded+" files loaded.");
 
@@ -222,6 +249,9 @@ void sprites() {
   spritesLoaded=1;
   iniciaPisos();
   println("Pisos Iniciados");
+  inventory=new Inventory();
+
+
   spritesLoaded=2;
 }
 void iniciaPisos() {
@@ -257,7 +287,7 @@ final int[] UNDERDRAWER={FURNCABINET, FURNFAKEFRAME, FURNSAFE, FURNDRAWER};
 final int[] PCorMAC={FURNPC, FURNMAC};
 final int[] UNDERSCOPE={FURNCABINET, FURNDRAWER, FURNBOOKCASE};
 class Room {
-  
+
   public String name;
   public PImage outImage;
   public boolean locked;
@@ -409,7 +439,7 @@ class Room {
             break;
           case 4:
           case 5: /*FURNCOFFEETABLE */
-            if (fx==0) {
+            if (fx==1) {
               furniture[fx][fy]=new Furniture(this, FURNCOFFEETABLE);
             }
             break;
@@ -541,7 +571,7 @@ class Room {
     int copiers=1+int(random(2));
     for (int f=0; f<copiers; f++) {
       rx=int(random(4));
-      placeTwoSlots(rx, 1, FURNPHOTOCOPIER);
+      placeTwoSlots(rx, 1, FURNCOPIER);
     }
     /* High chance of having drawers or lockers */
     for (rx=0; rx<5; rx++) {
@@ -760,10 +790,10 @@ class Room {
     }
     return FURNINVALID;
   }
-final private Furniture dummyInvalid=new Furniture(this,FURNINVALID);
+  final private Furniture dummyInvalid=new Furniture(this, FURNINVALID);
   /* Safely get actual Furniture object at (cx,cy) */
   Furniture safeGetFurnObject(int cx, int cy) {
-    
+
     if (cx>=5 | cx<0) return dummyInvalid;
     if (cy<0 | cy>1) return dummyInvalid;
     if (furniture[cy][cx]==null) return dummyInvalid;
@@ -874,18 +904,18 @@ void Pattern(int num) {
     break;
   case 5:
     // Polka dots
-     NokiaScreen.background(255);
-     final int R=8; 
-     final int halfR=4;
-     final float ang=HALF_PI/3;
-    for (int fy=0;fy<(48/halfR);fy++){
-      for (int fx=0;fx<(84/halfR);fx++){
-      float plus=R*(fx%2)*sin(ang);
-      NokiaScreen.ellipse(fx*R*cos(ang),
-        fy*2*R*sin(ang) +plus,
-        R/4,R/4);
+    NokiaScreen.background(255);
+    final int R=8; 
+    final int halfR=4;
+    final float ang=HALF_PI/3;
+    for (int fy=0; fy<(48/halfR); fy++) {
+      for (int fx=0; fx<(84/halfR); fx++) {
+        float plus=R*(fx%2)*sin(ang);
+        NokiaScreen.ellipse(fx*R*cos(ang), 
+          fy*2*R*sin(ang) +plus, 
+          R/4, R/4);
+      }
     }
-  }
   }  
 
   NokiaScreen.popStyle();
@@ -895,19 +925,26 @@ class Furniture {
   public boolean container=false;
   public boolean door=false;
   public boolean locked=false;
+  public boolean password=false;
+  public int keynum=0;
+  public int passnum=0;
   public int space=0;
-  public Item[] items[];
+  public Item[] items;
   public Room parentRoom;
   public int ftype; /* furniture type */
   public PImage image;
   public String name;
+
   Furniture(Room parentRoom) {
     container=false;
     locked=false;
+    password=false;
     space=0;
     this.ftype=FURNINVALID;
+    this.parentRoom=parentRoom;
   }
   Furniture(Room pRoom, int furntype) {
+
     container=false;
     locked=false;
     space=0;
@@ -928,6 +965,7 @@ class Furniture {
     case FURNBOOKCASE:
       this.name="Bookcase";
       this.image=furnBookcase;
+      this.space=3;
       break;
     case FURNCABINET:
       this.name="Cabinet";
@@ -936,14 +974,17 @@ class Furniture {
       } else {
         this.image=furnCabinetR;
       }
+      this.space=3;
       break;
     case FURNSHELF:
       this.name="Shelf";
       this.image=furnShelf;
+      this.space=1;
       break;
     case FURNWARDROBE:
       this.name="Wardrobe";
       this.image=furnWardrobe;
+      this.space=4;
       break;
     case FURNFAKEFRAME:
       /*SAFE inside a Picture frame */
@@ -955,18 +996,22 @@ class Furniture {
     case FURNBIGFILE:
       this.name="File";
       this.image=furnBigFile;
+      this.space=3;
       break;
     case FURNMAC:
       this.name="GUI computer";
       this.image=furnMac;
+      this.space=1;
       break;
     case FURNPC:
       this.name="Old computer";
       this.image=furnPC;
+      this.space=1;
       break;
-    case FURNPHOTOCOPIER:
+    case FURNCOPIER:
       this.name="Copier";
       this.image=furnPhotocopier;
+      this.space=1;
       break;
     case FURNSAFE:
       this.name="Safe";
@@ -979,6 +1024,7 @@ class Furniture {
     case FURNCOFFEETABLE:  
       this.name="Coffee table";
       this.image=furnCoffeeTable;
+      this.space=1;
       break;
     case FURNSOFA:  
       this.name="Restplace";
@@ -994,18 +1040,23 @@ class Furniture {
       if (this.parentRoom.rtype==HOFFICELAB) {
         this.name=""+labFridgeNames[int(random(labFridgeNames.length))];
       }
+      this.space=3;
       break;
     case FURNMICROWAVE:  
       this.name="Oven";
       this.image=furnMicrowave;
+      this.space=1;
       break;
     case FURNDRAWER:
       this.name="Drawers";
       this.image=furnDrawer;
+      this.space=2;
       break;
     case FURNWC:
       this.name=""+""+WCFunnyNames[int(random(WCFunnyNames.length))];
       this.image=furnWC;
+      /* Oh, so NASTY!*/
+      this.space=1;
       break;
     case FURNTAP:  
       this.name="Tap";
@@ -1014,24 +1065,166 @@ class Furniture {
     case FURNLABTABLE:
       this.name="Table";
       this.image= furnLabTable;
+      this.space=2;
       break;
     case FURNMICROSCOPE:
       this.name="Microscope";
       this.image=furnMicroscope;
+      /* Special. If I implement a microfilm, I will put it here */
       break;
     case FURNLAMP:
       this.name="Lamp";
       this.image=furnLamp;
+      /* Special. If I implement the invisible ink message, I will use this */
       break;
     case FURNMIRROR:
       this.name="Mirror, mirror";
       this.image=furnMirror;
+      /*   Special. Maybe I implement a secret mirror message,
+       such as releasing a password when there is a message on mirror 
+       */
+      break;
+    case FURNINVENTORY:
+      this.name="Inventory";
+      /* does not have an image */
+      this.space=8;
       break;
     }
+    this.items=new Item[space];
   }
-};
+  /* Move item FROM this furniture TO another Furniture (or inventory) */
+  int moveItem(int itemNum, Furniture dest) {
+    int returnvalue;
+    if (dest.space>0) {
+      if (dest.items!=null && this.items!=null) {
+        if (itemNum>=0 && itemNum <this.items.length) {
+          Item tmpItem=this.items[itemNum];
+          Item[] destArray=new Item[space];
+          for (int f=0; f<this.items.length; f++) {
+            if (f!=itemNum) {
+              append(destArray, this.items[f]);
+            }
+          }
+          returnvalue=dest.receiveItem(tmpItem);
+          if (returnvalue==-1) {
+            /* destination furniture can't receive item. CANCEL */
+            return -1;
+          } else { 
+            /* Everything OK. Replace items array and increase space */
+            this.space++;
+            this.items=destArray;
+            return returnvalue;
+          }
+        }
+      }
+    }
+    return -1;
+  }
+  int receiveItem(Item item) {
+    /* Process item reception */
+    if (this.space<=0) return -1;
 
+    if (this.locked) {
+      if (item.isKey && (item.keynum==this.keynum)) {
+        this.locked=false;
+      } else {
+        return -1;
+      }
+    }
+
+    if (this.password) {
+      if (item.isPassword && (item.passnum==this.passnum)) {
+        this.password=false;
+      } else {
+        return -1;
+      }
+    } else { 
+      return -1;
+    }
+
+    /* Test special furniture */
+    switch(this.ftype) {
+    case FURNPC:
+      if (item.itype!=ITEMDISKETTEPCOLD ) return -1;
+      break;
+    case FURNMAC:
+      if (item.itype!=ITEMDISKETTEMAC) return -1;
+      break;
+    case FURNCOPIER:
+      if (item.itype!=ITEMMAP &&  item.itype!= ITEMPASSWORD && item.itype!=ITEMPAPER ) {
+        return -1;
+      }
+      break;
+    }  
+
+    /* Ok Special furniture tested. Do special action */
+    switch (this.ftype) {
+    case FURNPC:
+      /* My idea is giving a clue, as "MAP is on"... */
+      break;
+    case FURNMAC:
+      /* My idea is choosing a random COPIER and printing a map on that */
+      break;
+    case FURNCOPIER:
+      switch  (int (random(10))) {
+      case 0:
+        tmpDialog("PAPER JAM");
+        break;
+      case 1:
+        tmpDialog("There was a paper on print queue ");
+        /* EXPAND -- Print a random MAP, CLUE or PASSWORD */
+        break;
+      case 2:
+        tmpDialog("NO TONER");
+        break;
+      default:
+        Item[] it=(Item[])append(this.items,item.copy());
+        this.items=it;
+        break;
+      }
+      break;
+    }
+  return 0;  
+  }
+  
+};
+class Inventory extends Furniture {
+  public boolean container=false;
+  public boolean door=false;
+  public boolean locked=false;
+  public int space=0;
+  public Item[] items[];
+  public Room parentRoom;
+  public int ftype; /* furniture type */
+  public PImage image;
+  public String name;
+  Inventory() {
+    super(new Room(HSELF), FURNINVENTORY);
+  }
+}
 class Item {
-  Item() {
+  Furniture parent; /* parent furniture */
+  public PImage image;
+  public String name;
+  public int itype;
+  public boolean isKey;
+  public boolean isPassword;
+  public int keynum;
+  public int passnum;
+  /* Complete constructor for cloning */
+  Item(PImage image, String name, int itype, boolean isKey, boolean isPassword, int keynum, int passnum) {
+    this.image=image;
+    this.name=name;
+    this.itype=itype;
+    this.isKey=isKey;
+    this.isPassword=isPassword;
+    this.keynum=keynum;
+    this.isPassword=isPassword;
+    this.passnum=passnum;
   };
+  Item() {
+  }
+  Item copy() {
+    return new Item(this.image, this.name, this.itype, this.isKey, this.isPassword, this.keynum, this.passnum);
+  }
 };
