@@ -1,4 +1,4 @@
-import java.io.*; //<>// //<>// //<>// //<>//
+import java.io.*; //<>// //<>// //<>// //<>// //<>//
 
 final int HLOBBY=0;
 final int HOFFICE=1;
@@ -15,7 +15,7 @@ int[] distribucion={HLOBBY,
 IntList dist;
 Room[][] piso=new Room[8][8];
 
-Inventory inventory;
+Furniture inventory;
 int spritesLoaded=0;
 int roomsGenerated=0;
 
@@ -37,13 +37,25 @@ PImage furnWardrobe;
 PImage furnLabTable;
 PImage furnMicroscope;
 PImage furnLamp;
-String[] labFridgeNames={
+PImage arrowR;
+PImage arrowL;
+PImage emptySpace;
+
+final String[] labFridgeNames={
   "Fresh blood", "Don't open", 
   "Biohazard", "Corpses"
 };
-String[]  WCFunnyNames={
+final String[]  WCFunnyNames={
   "WC", "seat", "A Throne of Games", 
   "poopatorium", "oval office", "commode"
+};
+final String[] passwordNames={ 
+  "1234", "admin", "7-7-1977", "TWOPIR", "john", "smith", "0000", "PAELLA", "Kandinsky", "3110"
+};
+final String[] bookNames={
+  "Malleus Maleficarum", 
+  "MSDXS User's Guide", 
+  ""
 };
 ArrayList <namedImage> furnFrame=new ArrayList <namedImage>();
 /* Office and Special office furniture*/
@@ -64,7 +76,7 @@ PImage itemJar, itemPaper, itemTorch;
 PImage itemBackpack, itemPen;
 PImage itemDiskettemac;
 PImage itemDiskettepcold;
-
+PImage itemMap, itemBook, itemBlowgun;
 
 final int FURNSEEUP=-1; /* EMPTY furniture slot occupied by furniture at top*/
 final int FURNSEELEFT=-2; /* EMPTY furniture slot occupied by furniture at left*/
@@ -97,6 +109,7 @@ final int FURNLAMP=24;
 final int FURNMIRROR=25;
 final int FURNINVENTORY=99;
 int filesLoaded=0; /* number of files loaded */
+final int ITEMEMPTY=0;
 final int ITEMBACKPACK = 1;
 final int ITEMPEN = 2;
 final int ITEMCLIP = 3;
@@ -109,8 +122,10 @@ final int ITEMKEY=10;
 final int ITEMMAP=11;
 final int ITEMPASSWORD=12;
 final int ITEMPAPER = 15;
-final int ITEMPHOTOCOPIER = 16;
 final int ITEMTORCH = 17;
+final int ITEMBOOK=19;
+final int ITEMFURNITURE=20;
+final int ITEMSECRETRECIPE=100;
 
 class namedImage {
   PImage image;
@@ -120,6 +135,9 @@ class namedImage {
     this.name=n;
   }
 }
+int nextKeynum=0; /* Keynum for next key generation */
+int nextPassword=0; /* Keynum for next key generation */
+int nextBook=0; /* Keynum for next key generation. This simply reduces duplicate books. */
 
 void sprites() {
   spritesLoaded=0;
@@ -127,7 +145,7 @@ void sprites() {
 
   sprHand=loadImage("hand.png");
   filesLoaded++;
-  //String path=dataPath(File.separator)+File.separator+"assets_rooms"+File.separator;
+  //String path=dataPath(Fileseparator)+File.separator+"assets_rooms"+File.separator;
   String path="";
 
   doorOffice=loadImage(path+"office1.png");
@@ -237,21 +255,25 @@ void sprites() {
   filesLoaded++;
   itemTorch=loadImage(path+"Torch.png"); /* 1Wx1H */
   filesLoaded++;
-  itemBackpack =loadImage("");
+  itemBackpack =loadImage(path+"backpack.png");
   filesLoaded++;
-  itemPaper=loadImage("");
+  itemPaper=loadImage(path+"Paper.png");
   filesLoaded++;
+  itemMap=loadImage(path+"Map.png");
+  itemBook=loadImage(path+"Book.png");
+  itemBlowgun=loadImage(path+"blowgun.png");
 
-
+  arrowR=loadImage("flechaR.png");
+  arrowL=loadImage("flechaL.png");
+  emptySpace=loadImage("EmptySpace.png");
   //println(filesLoaded+" files loaded.");
-
   println("All Sprites loaded");
   spritesLoaded=1;
+  inventory=new Furniture(new Room(HSELF), FURNINVENTORY);
   iniciaPisos();
+  checkRoomTypes();
   println("Pisos Iniciados");
-  inventory=new Inventory();
-
-
+  hideObjects();
   spritesLoaded=2;
 }
 void iniciaPisos() {
@@ -276,6 +298,105 @@ void iniciaPisos() {
     println(debugString);
   }
 }
+void checkRoomTypes() {
+  int countRepro=0;
+  int countBoss=0;
+  int countLab=0;
+  /* Make sure there is at least one Boss, one Repro and one Lab */
+  for (int ff=0; ff<8; ff++) {
+    for (int gg=0; gg<8; gg++) {
+      if (piso[ff][gg]!=null) {
+        if (piso[ff][gg].rtype==HOFFICEBOSS) countBoss++;
+        if (piso[ff][gg].rtype==HOFFICELAB) countLab++;
+        if (piso[ff][gg].rtype==HOFFICEREPRO) countRepro++;
+      }
+    }
+  }
+  if (countBoss<1) {
+    if (forcedSubstitute(HOFFICE, HOFFICEBOSS)==-1)
+      println("Couldn't force substitute "+HOFFICE+" by "+HOFFICEBOSS);
+    else
+      println("Forced substitution of "+HOFFICE+" by "+HOFFICEBOSS);
+  }
+  if (countLab<1) {
+    if (forcedSubstitute(HOFFICE, HOFFICELAB)==-1)
+      println("Couldn't force substitute "+HOFFICE+" by "+HOFFICELAB);
+    else
+      println("Forced substitution of "+HOFFICE+" by "+HOFFICELAB);
+  }
+  if (countRepro<1) {
+    if (forcedSubstitute(HOFFICE, HOFFICEREPRO)==-1)
+      println("Couldn't force substitute "+HOFFICE+" by "+HOFFICEREPRO);
+    else
+      println("Forced substitution of "+HOFFICE+" by "+HOFFICEREPRO);
+  }
+  println("Forced substitutions ended");
+}
+void hideObjects() {
+  int dst[]={FURNFAKEFRAME, FURNSAFE};
+  Furniture recipeFur=insertAtRandomFurn(dst, ITEMSECRETRECIPE);
+  if (recipeFur==null) {
+    println("RecipeFur is NULL!");
+  }
+  
+}
+int forcedSubstitute(int srctype, int dsttype) {
+  int randx=int(random(8));
+  int randy=int(random(8));
+  for (int f=0; f<8; f++) {
+    for (int g=0; g<8; g++) {
+      int y=(f+randy) % piso.length;
+      int x=(g+randx) % (piso[y].length);
+      if (piso[y][x]==null) {
+        println("inserting at NULL floor "+x+","+y);
+        println("!!!");
+      } else  if (piso[y][x].rtype==srctype) {
+        piso[y][x]=new Room(dsttype);
+        return 0;
+      }
+    }
+  }
+  return -1;
+}
+
+Furniture insertAtRandomFurn(int[] desttype, int itemtype) {
+  //println("insertAtRandomFurn()");
+  if (desttype==null || desttype.length==0 ) return null;
+  int randx=int(random(8));
+  int randy=int(random(8));
+  for (int f=0; f<8; f++) {
+    int y=(f+randy) % piso.length;
+    for (int g=0; g<8; g++) {
+      int x=(g+randx) % (piso[y].length);
+      //println("Looking for furn at piso"+y+" room"+x);
+      if (piso[y][x]!=null && piso[y][x].rtype!=HSTAIRS) {
+        if (piso[y][x].locked==false) {
+          for (int ff=0; ff<2; ff++) {
+            for (int gg=0; gg<5; gg++) {
+              int randyy=int(random(2));
+              int randxx=int(random(5));
+              int yy=(ff+randyy) % 2;
+              int xx=(gg+randxx) % 5;
+              //println("furniture ("+yy+") ("+xx+")");
+              for (int type=0; type<desttype.length; type++) {
+                if (piso[y][x].safeTest(xx, yy, desttype[type])) {
+
+                  Furniture furnObject= piso[y][x].safeGetFurnObject(yy, xx);
+                  if (!furnObject.locked && !furnObject.password) {
+                    if (furnObject.space>0) return furnObject;
+                  }
+                }
+              }
+              //println("Not found");
+            }
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
 final int[] MICROWAVEorCOFFEE={FURNMICROWAVE, FURNCOFFEE};
 final int[] DRAWERorCABINET={FURNDRAWER, FURNCABINET};
 final int[] DRAWERorCABINETorSAFE={FURNDRAWER, FURNCABINET, FURNSAFE, FURNFAKEFRAME};
@@ -313,7 +434,7 @@ class Room {
       name="lobby";
       outImage=doorLobby;
       makeLobby();
-      break;    
+      break;
     case HOFFICE:
     default:
       switch (int(random(10))) {
@@ -347,6 +468,32 @@ class Room {
         break;
       }
       break;
+    case HOFFICELAB:
+      /* Forced Lab */
+      this.rtype=HOFFICELAB;
+      name="laboratory";
+      outImage=doorLab;
+      makeLab();
+      displayTextRoom();
+      break;
+    case HOFFICEBOSS:
+      /* Forced Boss office */
+      this.rtype=HOFFICEBOSS;
+      name="executive";
+      outImage=doorOffice;
+      makeBossOffice();
+      makeOffice();
+      displayTextRoom();
+      break;
+    case HOFFICEREPRO:
+      /* Forced Repro */
+      this.rtype=HOFFICEREPRO;
+      name="reprographic";
+      outImage=doorOffice;
+      makeReproOffice();
+      displayTextRoom();
+      break;
+
     case HKITCHEN:
       name="kitchen";
       outImage=doorKitchen;
@@ -604,7 +751,7 @@ class Room {
       ry=int(random(2));
       if (emptyPlace(rx, ry)) {
         this.furniture[ry][rx]=
-          new Furniture(this, int(random(5))==1? FURNFAKEFRAME : FURNFRAME);
+          new Furniture(this, int(random(5))==1? FURNFAKEFRAME: FURNFRAME);
         break;
       }
     }
@@ -617,7 +764,7 @@ class Room {
       ry=int(random(2));
       if (emptyPlace(rx, ry)) {
         this.furniture[ry][rx]=
-          new Furniture( this, int(random(5))==1? FURNFAKEFRAME : FURNFRAME);
+          new Furniture( this, int(random(5))==1? FURNFAKEFRAME: FURNFRAME);
         break;
       }
     }
@@ -773,8 +920,8 @@ class Room {
     int tries=5;
     /* this should loop twice at most, but we will give 5 tries */
     while (tries>0) {
-      if (cx>=5 | cx<0) return FURNINVALID;
-      if (cy<0 | cy>1) return FURNINVALID;
+      if (cx>=5 || cx<0) return FURNINVALID;
+      if (cy<0 || cy>1) return FURNINVALID;
       if (furniture[cy][cx]==null) return FURNINVALID;
       switch  (furniture[cy][cx].ftype) {
       case FURNSEEUP: 
@@ -794,8 +941,8 @@ class Room {
   /* Safely get actual Furniture object at (cx,cy) */
   Furniture safeGetFurnObject(int cx, int cy) {
 
-    if (cx>=5 | cx<0) return dummyInvalid;
-    if (cy<0 | cy>1) return dummyInvalid;
+    if (cx>=5 || cx<0) return dummyInvalid;
+    if (cy<0 || cy>1) return dummyInvalid;
     if (furniture[cy][cx]==null) return dummyInvalid;
     if (furniture[cy][cx].ftype==FURNSEEUP) return safeGetFurnObject(cx, cy-1);
     if (furniture[cy][cx].ftype==FURNSEELEFT) return safeGetFurnObject( cx-1, cy);
@@ -804,18 +951,20 @@ class Room {
 
   /* Safely get if furntype at (cx,cy) is furntype */
   boolean safeTest(int cx, int cy, int furntype) {
-    if (cx>=5 | cx<0) return false;
-    if (cy<0 | cy>1) return false;
-    if (furniture[cy][cx]==null) return false; 
+    if (cx>=5 || cx<0) return false;
+    if (cy<0 || cy>1) return false;
+    if (furniture==null || furniture[cy][cx]==null) return false; 
     if (furniture[cy][cx].ftype==furntype) return true;
+    
     /* Añadido. No sé si puede causar problemas (es posible
      que inicialmente quitase esta función a propósito) */
-    if (furniture[cy][cx].ftype==FURNSEELEFT && cx>0) {
-      if (furniture[cy][cx-1].ftype==furntype) return true;
-    }
-    if (furniture[cy][cx].ftype==FURNSEEUP && cy>0) {
-      if (furniture[cy-1][cx].ftype==furntype) return true;
-    }
+     /* Desde luego, no debería estar activo en la fase de creación */
+    //if (furniture[cy][cx].ftype==FURNSEELEFT && cx>0) {
+    //  if (furniture[cy][cx-1].ftype==furntype) return true;
+    //}
+    //if (furniture[cy][cx].ftype==FURNSEEUP && cy>0) {
+    //  if (furniture[cy-1][cx].ftype==furntype) return true;
+    //}
 
     return false;
   }
@@ -823,7 +972,7 @@ class Room {
   /* Is this column empty? */
   boolean emptyColumn(int cx) {
     boolean empty=true;        
-    if (cx>=5 | cx<0) return true;
+    if (cx>=5 || cx<0) return true;
     for (int cy=0; cy<2; cy++) {
       if (this.furniture[cy][cx]!=null) {
         if (this.furniture[cy][cx].ftype!=FURNINVALID) {
@@ -934,7 +1083,7 @@ class Furniture {
   public int ftype; /* furniture type */
   public PImage image;
   public String name;
-
+  final Item empty_space=new Item(ITEMEMPTY);
   Furniture(Room parentRoom) {
     container=false;
     locked=false;
@@ -1090,31 +1239,26 @@ class Furniture {
       this.space=8;
       break;
     }
-    this.items=new Item[space];
+    this.items=new Item[0];
+    for (int f=0; f<space; f++) {
+      this.items=(Item[]) append(this.items,empty_space);
+    }
   }
   /* Move item FROM this furniture TO another Furniture (or inventory) */
   int moveItem(int itemNum, Furniture dest) {
     int returnvalue;
     if (dest.space>0) {
       if (dest.items!=null && this.items!=null) {
-        if (itemNum>=0 && itemNum <this.items.length) {
-          Item tmpItem=this.items[itemNum];
-          Item[] destArray=new Item[space];
-          for (int f=0; f<this.items.length; f++) {
-            if (f!=itemNum) {
-              append(destArray, this.items[f]);
-            }
-          }
-          returnvalue=dest.receiveItem(tmpItem);
-          if (returnvalue==-1) {
-            /* destination furniture can't receive item. CANCEL */
-            return -1;
-          } else { 
-            /* Everything OK. Replace items array and increase space */
-            this.space++;
-            this.items=destArray;
-            return returnvalue;
-          }
+        Item tmpItem=this.items[itemNum];
+        returnvalue=dest.receiveItem(tmpItem);
+        if (returnvalue==-1) {
+          /* destination furniture can't receive item. CANCEL */
+          return -1;
+        } else { 
+          /* Everything OK. Replace items array and increase space */
+          this.space++;
+          this.items[itemNum]=empty_space;
+          return returnvalue;
         }
       }
     }
@@ -1178,39 +1322,67 @@ class Furniture {
         tmpDialog("NO TONER");
         break;
       default:
-        Item[] it=(Item[])append(this.items,item.copy());
-        this.items=it;
+        addToItemArray(item);
+
         break;
       }
       break;
     }
-  return 0;  
+    return 0;
   }
-  
+  /*
+  Añadir un objeto a la matriz de objetos.
+   Este método se llama solo:
+   a) desde ReceiveItem
+   b) Al crear el mapa.
+   */
+
+  void addToItemArray(Item item) {
+    /*
+    Se asume que ReceiveItem ha comprobado el espacio. 
+     Si el espacio es insuficiente, es que nos llaman desde
+     las rutinas de creación de mapa
+     */
+    if (this.space==0) this.space++;
+    if (this.items==null) {
+      /* Si la matriz es nula, crear una nueva matriz */
+      /* 
+       SE SUPONE QUE ESTO NO DEBERÍA SER NECESARIO 
+       (La matriz se genera al crear el mueble)
+       */
+      this.items=new Item[space];
+      items[0]=item;
+      for (int f=1; f<this.items.length; f++) {
+        items[f]=empty_space;
+      }
+    } else {
+      boolean success=false;
+      for (int f=0; f<this.items.length; f++) {
+        if (this.items[f]==null || this.items[f].itype==ITEMEMPTY) {
+          this.items[f]=item;
+          success=true;
+          break;
+        }
+      }
+      if (success!=true) {
+        Item[] it=(Item[])append(this.items, item.copy());
+        this.items=it;
+      }
+    }
+  }
 };
-class Inventory extends Furniture {
-  public boolean container=false;
-  public boolean door=false;
-  public boolean locked=false;
-  public int space=0;
-  public Item[] items[];
-  public Room parentRoom;
-  public int ftype; /* furniture type */
-  public PImage image;
-  public String name;
-  Inventory() {
-    super(new Room(HSELF), FURNINVENTORY);
-  }
-}
+
+
+
 class Item {
   Furniture parent; /* parent furniture */
   public PImage image;
-  public String name;
+  public String name="";
   public int itype;
-  public boolean isKey;
-  public boolean isPassword;
-  public int keynum;
-  public int passnum;
+  public boolean isKey=false;
+  public boolean isPassword=false;
+  public int keynum=0;
+  public int passnum=0;
   /* Complete constructor for cloning */
   Item(PImage image, String name, int itype, boolean isKey, boolean isPassword, int keynum, int passnum) {
     this.image=image;
@@ -1222,7 +1394,86 @@ class Item {
     this.isPassword=isPassword;
     this.passnum=passnum;
   };
-  Item() {
+  Item(int itype) {
+    this.itype=itype;
+    this.isKey=false;
+    this.isPassword=false;
+    this.keynum=0;
+    this.passnum=0;
+    switch (itype) {
+    case ITEMEMPTY:
+      this.image=emptySpace;
+      this.name="";
+      break;
+    case ITEMBACKPACK: 
+      this.image=itemBackpack;
+      this.name="Backpack";
+      break;
+    case ITEMPEN:
+      this.image=itemPen;
+      this.name="Ballpen";
+      break;
+    case ITEMCLIP:
+      this.image=itemClip;
+      this.name="Clip";
+      break;
+    case ITEMCUP:
+      this.name="Cup";
+      this.image=itemCup;
+      break;
+    case ITEMDISKETTEMAC: 
+      this.name="3 1/2\" disk";
+      this.image=itemDiskettemac;
+      break;
+    case ITEMDISKETTEPCOLD: 
+      this.name="5 1/4\" disk";
+      this.image=itemDiskettepcold;
+      break;
+    case ITEMENVELOPE: 
+      this.image=itemEnvelope;
+      this.name="envelope";
+      break;
+    case ITEMGASMASK: 
+      this.image=itemGasMask;
+      this.name="Gas mask";
+      break;
+    case ITEMKEY: 
+      int rand=int(random(itemKey.size() ));
+      this.image=itemKey.get(rand);
+      this.isKey=true;
+      this.keynum=nextKeynum++;
+      break;
+    case ITEMMAP: 
+      this.image=itemMap;
+      this.name="Map";
+      break;
+    case ITEMPASSWORD:
+      this.image=itemPaper;
+      this.isPassword=true;
+      this.passnum=nextPassword++;
+      this.name=passwordNames[this.passnum % passwordNames.length];
+      break;
+    case ITEMPAPER: 
+      this.image=itemPaper;
+      this.name="Paper";
+      break;
+    case ITEMTORCH: 
+      this.image=itemTorch;
+      this.name="Torch";
+      break;
+    case ITEMBOOK: 
+      this.name=bookNames[(nextBook++) % bookNames.length];
+      this.image=itemBook;
+      break;
+    case ITEMFURNITURE: 
+      this.name="Fake item for Furniture usage";
+      this.image=furnWC;
+      break;
+    case ITEMSECRETRECIPE: 
+      this.name="Secret Paella Recipe";
+      this.image=itemPaper;
+      break;
+    }
   }
   Item copy() {
     return new Item(this.image, this.name, this.itype, this.isKey, this.isPassword, this.keynum, this.passnum);

@@ -60,7 +60,8 @@ void setup() {
    just in case compiler does not optimize them
    */
 
-  thread("sprites");
+thread("sprites");
+//sprites();
   nkh=scale*48;
   nkw=scale*84;
   nkbuffsize=48*84*displayDensity();
