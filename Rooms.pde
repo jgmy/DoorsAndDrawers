@@ -2,6 +2,7 @@ import java.io.*; //<>//
 
 
 Room[][] piso=new Room[8][8];
+StringList hints=new StringList();
 
 Furniture inventory;
 
@@ -63,12 +64,137 @@ void checkRoomTypes() {
   println("Forced substitutions ended");
 }
 void hideObjects() {
-  int dst[]={FURNFAKEFRAME, FURNSAFE};
-  Furniture recipeFur=insertAtRandomFurn(dst, ITEMSECRETRECIPE);
-  if (recipeFur==null) {
-    println("RecipeFur is NULL!");
+  int [][] dst={
+    {FURNFAKEFRAME, FURNSAFE}, 
+    {FURNDRAWER, FURNCABINET, FURNWARDROBE, FURNFRIDGE}, 
+    {FURNTABLE, FURNLABTABLE, FURNCOFFEETABLE, FURNBOOKCASE, FURNSHELF} };
+  Furniture recipeFur;
+  for (int f=0; f<3; f++) {
+    recipeFur=insertAtRandomFurn(dst[f], ITEMSECRETRECIPE);
+    if (recipeFur==null) {
+      println("trying to hide recipe at unsafer furniture");
+    } else {
+    recipeFur.locked=true;
+    recipeFur.keynum=0;
+      break;
+    }
   }
-  
+
+  int tries=0; /* Safeguard */
+  int [][] keyHideOuts={
+      {FURNFAKEFRAME, FURNSAFE}, 
+      {FURNDRAWER, FURNCABINET, FURNWARDROBE, FURNFRIDGE}, 
+      {FURNTABLE, FURNLABTABLE, FURNCOFFEETABLE, FURNBOOKCASE, FURNSHELF} };
+  while (nextKeynum<10 && tries<50) {
+     tries++;
+    int success=0;
+    Furniture keyFur;
+    // 1- Hide last used key:
+    println("hide "+nextKeynum);
+    for (int f=0; f<3; f++) {
+      keyFur=insertAtRandomFurn(keyHideOuts[f], ITEMKEY);
+      if (keyFur==null) {
+        println("trying to hide key"+nextKeynum+" at unsafer furniture");
+      } else {
+        success=1;
+        break;
+      }
+    }
+    /* If we couldn't hide last key. Abort */
+    if ( success==0) break; /* break while */
+    // 2- Close next object
+    if (closeRandomFloorOrFurniture()==0) break;
+  }
+  croquisLlaves();
+}
+
+void croquisLlaves(){
+  Room thisroom;
+  int planta, sala, y,x,it;
+  Furniture thisfurniture;
+  for (planta=0;planta<8;planta++){
+    for (sala=0;sala<8;sala++){
+      if (piso[planta][sala]!=null){
+        thisroom=piso[planta][sala];
+        if (thisroom.locked){
+          println(thisroom.name+" "+planta+sala+" cerrada con llave"+thisroom.key);
+        }
+        if (thisroom.rtype!=HSTAIRS && thisroom.furniture!=null){
+          for (y=0;y<2;y++){
+            for (x=0;x<5;x++){
+              if (thisroom.furniture[y][x]!=null){
+                thisfurniture=thisroom.furniture[y][x];
+                if (thisfurniture.locked) {
+                  println(thisfurniture.name+" cerrada con llave"+thisfurniture.keynum+" en "+thisroom.name+" "+planta+sala);
+                }
+                if (thisfurniture.items!=null){
+                  for (it=0;it<thisfurniture.items.length;it++){
+                    if (thisfurniture.items[it].itype==ITEMKEY){
+                      println("Llave "+thisfurniture.items[it].keynum+
+                      "en "+thisfurniture.name+" "+
+                      (thisfurniture.locked ? ("cerrado con llave "+thisfurniture.keynum) : "abierto")+
+                      " en "+thisroom.name+" "+planta+sala);
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+int closeRandomFloorOrFurniture() {
+  int randx=int(random(8));
+  int randy=int(random(8));
+  for (int f=0; f<8; f++) for (int g=0; g<8; g++) {
+    int y=(f+randy) % piso.length;
+    int x=(g+randx) % (piso[y].length);
+    if ((piso[y][x]!=null) && (!piso[y][x].locked) && (piso[y][x].rtype!=HSTAIRS)) {
+      if (random(2)<1) {
+        piso[y][x].locked=true;
+        piso[y][x].key=nextKeynum;
+        return 0;
+      } else {
+        /* Try to close a furniture */
+        if (closeRandomFurn(piso[y][x])==-1) {
+          /* There is no closeable furn */
+          piso[y][x].locked=true;
+          piso[y][x].key=nextKeynum;
+          return 0;
+        } else {
+          /* Furniture closed OK */
+          return 0;
+        }
+      } /* end if random */
+    } /* end if test piso */
+  }
+  return -1;
+}
+
+int closeRandomFurn(Room room) {
+  int [] closeable={FURNFAKEFRAME, FURNSAFE, FURNDRAWER, FURNCABINET, FURNWARDROBE, FURNFRIDGE};
+
+  int randx=int(random(8));
+  int randy=int(random(8));
+  if (room==null) return -1;
+  for (int f=0; f<2; f++) for (int g=0; g<5; g++) {
+    int y=(f+randy) % 2;
+    int x=(g+randx) % 5;
+    for (int c=0; c<closeable.length; c++) {
+      if (room.safeTest(x, y, closeable[c])) {
+        Furniture destFurn=room.safeGetFurnObject(x, y);
+        if (!destFurn.locked) {
+          destFurn.locked=true;
+          destFurn.keynum=nextKeynum;
+          return 0;
+        }
+      }
+    }
+  }
+  return -1;
 }
 int forcedSubstitute(int srctype, int dsttype) {
   int randx=int(random(8));
@@ -113,7 +239,12 @@ Furniture insertAtRandomFurn(int[] desttype, int itemtype) {
 
                   Furniture furnObject= piso[y][x].safeGetFurnObject(yy, xx);
                   if (!furnObject.locked && !furnObject.password) {
-                    if (furnObject.space>0) return furnObject;
+                    if (furnObject.space>0) {
+                      Item escondido=new Item(itemtype);
+                      furnObject.addToItemArray(escondido);
+                      makeHint(escondido.name, x, y, furnObject.name);
+                      return furnObject;
+                    }
                   }
                 }
               }
@@ -127,6 +258,11 @@ Furniture insertAtRandomFurn(int[] desttype, int itemtype) {
   return null;
 }
 
+void makeHint(String nombre, int habitacion, int planta, String mueble) {
+  hints.push("There is a "+nombre+"inside a "+mueble);
+  hints.push("Search "+piso[planta][habitacion].name+" "+planta+habitacion+" for a "+nombre);
+  hints.push(nombre+" is at floor #"+planta);
+}
 
 class Room {
 
@@ -676,10 +812,10 @@ class Room {
     if (cy<0 || cy>1) return false;
     if (furniture==null || furniture[cy][cx]==null) return false; 
     if (furniture[cy][cx].ftype==furntype) return true;
-    
+
     /* Añadido. No sé si puede causar problemas (es posible
      que inicialmente quitase esta función a propósito) */
-     /* Desde luego, no debería estar activo en la fase de creación */
+    /* Desde luego, no debería estar activo en la fase de creación */
     //if (furniture[cy][cx].ftype==FURNSEELEFT && cx>0) {
     //  if (furniture[cy][cx-1].ftype==furntype) return true;
     //}
@@ -962,7 +1098,7 @@ class Furniture {
     }
     this.items=new Item[0];
     for (int f=0; f<space; f++) {
-      this.items=(Item[]) append(this.items,empty_space);
+      this.items=(Item[]) append(this.items, empty_space);
     }
   }
   /* Move item FROM this furniture TO another Furniture (or inventory) */
