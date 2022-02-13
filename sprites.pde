@@ -40,7 +40,9 @@ PImage itemBackpack, itemPen;
 PImage itemDiskettemac;
 PImage itemDiskettepcold;
 PImage itemMap, itemBook, itemBlowgun;
-
+PImage itemDiamond,itemClock;
+PImage itemToiletPaper;
+PImage itemCupCoffee;
 
 class namedImage {
   PImage image;
@@ -140,8 +142,8 @@ void sprites() {
   furnLamp=loadImage(path+"Lamp.png");
   filesLoaded++;
   furnMirror=loadImage(path+"Mirror.png");
-
-
+  filesLoaded++;
+  
 
   /* Small Objects inside of furniture */
   itemKey.add(loadImage(path+"key1.png"));
@@ -186,7 +188,14 @@ void sprites() {
   filesLoaded++;
   emptySpace=loadImage("EmptySpace.png");
   filesLoaded++;
-  //println(filesLoaded+" files loaded.");
+  itemDiamond=loadImage("Diamond.png");
+  filesLoaded++;
+  itemClock=loadImage("Clock.png");
+  filesLoaded++;
+  itemToiletPaper=loadImage("ToiletPaper.png");
+  itemCupCoffee=loadImage("CupCoffee.png");
+  
+  println(filesLoaded+" files loaded.");
   println("All Sprites loaded");
   spritesLoaded=1;
   inventory=new Furniture(new Room(HSELF), FURNINVENTORY);

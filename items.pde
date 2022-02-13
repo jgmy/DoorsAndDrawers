@@ -11,6 +11,7 @@ class Item {
   public boolean isPassword=false;
   public int keynum=0;
   public int passnum=0;
+  public int value=0;
   /* Complete constructor for cloning */
   Item(PImage image, String name, int itype, boolean isKey, boolean isPassword, int keynum, int passnum) {
     this.image=image;
@@ -49,6 +50,9 @@ class Item {
       this.name="Cup";
       this.image=itemCup;
       break;
+    case ITEMCOFFEE:
+      this.name="A cup of coffee";
+      this.image=itemCup;
     case ITEMDISKETTEMAC: 
       this.name="3 1/2\" disk";
       this.image=itemDiskettemac;
@@ -93,6 +97,17 @@ class Item {
       this.name=bookNames[(nextBook++) % bookNames.length];
       this.image=itemBook;
       break;
+    case ITEMJAR:
+      this.name="A jar";
+      this.image=itemJar;
+      break;
+    case ITEMJARCLIP:
+      this.image=itemJar;
+      this.name="This jar contains something";
+    case ITEMJARCOFFEE:
+      this.image=itemJar;
+      this.name="A jar of coffee";
+      break;
     case ITEMFURNITURE: 
       this.name="Fake item for Furniture usage";
       this.image=furnWC;
@@ -101,6 +116,19 @@ class Item {
       this.name="Secret Paella Recipe";
       this.image=itemPaper;
       break;
+    case ITEMHINT:
+      this.name=hints.get(int(random(hints.size())));;
+      this.image=itemPaper;
+    case ITEMDIAMOND:
+      this.name="diamond";
+      this.value=100;
+      this.image=itemDiamond;
+    case ITEMCLOCK:
+      this.name="Are we looking for mushrooms or Rolx?";
+      this.value=50;
+   default:
+     String str="***********";
+     println(str+"NO METHOD FOR ITEM "+this.itype+str);
     }
   }
   Item copy() {

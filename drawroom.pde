@@ -1,3 +1,7 @@
+/* Inventory screen scrolling */
+int inventoryScroll=0;
+int ACTIONLEFT=1,ACTIONHAND=2,ACTIONEYE=3,ACTIONINVENTORY=1024;
+int [] actions={ACTIONLEFT,ACTIONHAND,ACTIONEYE,ACTIONINVENTORY};
 // This assumes NokiaScreen.beginDraw() has been called.
 String scrollDRtx="";
 int scrollDRi=0;
@@ -33,10 +37,15 @@ void drawRoom() {
       scrollDRi=0;
     } /* end check for invalid furn*/
     /* SHOW ICONS HERE */
+ 
+    /* if (inventoryScroll)>0{
+      image(arrowLeft,0,32);
+      action(0)=
+    } */
     for (int f=0; f<inventory.items.length; f++) {
       Item object=inventory.items[f];
       if (inventory.items[f]!=null) {
-        image(inventory.items[f].image, f*16, 32);
+        image(inventory.items[f].image, (3+f)*16, 32);
       }
     }
     /* Scroll on bottom when myY<2 */

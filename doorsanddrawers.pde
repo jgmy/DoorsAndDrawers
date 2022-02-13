@@ -79,7 +79,9 @@ int lastStatus=STATUSINTRO;
 void draw() {
   float ti;
 
-  if (status!=lastStatus) println("Status changed from "+lastStatus+" to "+status);
+  if (status!=lastStatus) {
+    println("Status changed from "+lastStatus+" to "+status);
+  }
   lastStatus=status;
   ti=millis();
   if (drawing) {
@@ -202,7 +204,7 @@ void drawFloor() {
 }
 
 String[] strInstrucciones={"Loading Sprites", "Generating rooms", "Press any key"+
-  " - WASD / ARROWS / KEYPAD move"+
+  " - WASD+SPACE / ARROWS / KEYPAD move"+
   " - Find the secret Chorizo Paella recipe and escape building..."};
 int textScrollx=0;
 
@@ -259,15 +261,15 @@ void colorFilter() {
 
 void keyPressed() {
   if (waitKeyAny|status==STATUSINTRO) {
-    println("Any key Pressed"+status);
-    println("Sprites loaded:"+spritesLoaded);
+    // println("Any key Pressed"+status);
+    // println("Sprites loaded:"+spritesLoaded);
     if (status==STATUSINTRO) status=STATUSFLOOR;
     else if (status==STATUSROOM) 
     {
       status=STATUSFLOOR;
       myX=((7+myRoom) % 8)*32;
     } else if (status==STATUSEXITGAME) exit();
-    println("Next Status"+status);
+    // println("Next Status"+status);
     return;
   } else if (status==(STATUSDIALOG | STATUSROOM)) {
     myX=storeRoomX;
@@ -335,7 +337,7 @@ void keyPressed() {
     /* KEYCODE USED */
     switch(keyCode) {
     case UP:
-      println ("UP key");
+      // println ("UP key");
       doUp();
       break;
     case DOWN:
@@ -363,7 +365,7 @@ void keyPressed() {
       doEscape();
       break;
     default:
-      println("Keycode Pressed"+keyCode);
+      // println("Keycode Pressed"+keyCode);
       break;
     }
   }
