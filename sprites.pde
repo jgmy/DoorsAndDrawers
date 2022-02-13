@@ -1,5 +1,6 @@
 PImage sprHand;
 PImage sprPadlock;
+PImage sprEye;
 PImage doorOffice;
 PImage doorStairs;
 PImage doorToilet;
@@ -24,6 +25,7 @@ PImage GUIprint;
 PImage GUIsad;
 PImage GUIhappy;
 
+
 ArrayList <namedImage> furnFrame=new ArrayList <namedImage>();
 /* Office and Special office furniture*/
 PImage furnBigFile, furnMac, furnPC;
@@ -47,6 +49,8 @@ PImage itemMap, itemBook, itemBlowgun;
 PImage itemDiamond,itemClock;
 PImage itemToiletPaper;
 PImage itemCupCoffee;
+PImage[] actionSprites={sprHand,sprEye,itemBackpack};
+PImage itemSprite;
 
 class namedImage {
   PImage image;
@@ -66,8 +70,17 @@ void sprites() {
 
   sprHand=loadImage("hand.png");
   filesLoaded++;
+  sprEye=loadImage("eye.png");
+  filesLoaded++;
+  itemBackpack =loadImage("backpack.png");
+  filesLoaded++;
+
   //String path=dataPath(Fileseparator)+File.separator+"assets_rooms"+File.separator;
   String path="";
+  actionSprites[0]=sprHand;
+  actionSprites[1]=sprEye;
+  actionSprites[2]=itemBackpack;
+  itemSprite=sprHand;  
 
    GUIwindow=loadImage("GUICOMP-window.png");
    GUIprint=loadImage("GUICOMP-docprinted.png");
@@ -202,10 +215,13 @@ void sprites() {
   itemClock=loadImage("Clock.png");
   filesLoaded++;
   itemToiletPaper=loadImage("ToiletPaper.png");
-  itemCupCoffee=loadImage("CupCoffee.png");
-  
+  itemCupCoffee=loadImage("CupCoffee.png"); 
   println(filesLoaded+" files loaded.");
+ 
   println("All Sprites loaded");
+ 
+  spritesLoaded=1;
+
   spritesLoaded=1;
   inventory=new Furniture(new Room(HSELF), FURNINVENTORY);
   iniciaPisos();

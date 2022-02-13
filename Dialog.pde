@@ -53,6 +53,7 @@ void dialogMessage() {
 */
 void tmpDialog(String str){
   MessageDialog=str;
+  dialognum=DIALOG_INFO;
   switch(status){
     case STATUSFLOOR:
       storeFloorX=myX; 
@@ -60,7 +61,51 @@ void tmpDialog(String str){
     case STATUSROOM:
       storeRoomX=myX;
       storeRoomY=myY;
-  }
+      break;
+    case STATUSINVENTORY:
+      storeRoomX=myX;
+      storeRoomY=myY;
+      break;
+}
   status=status|STATUSDIALOG;
+  
+}
+int MacLastFrame=0;
+int MacDialogStatus;
+final int MACHAPPYTHENPRINT=1;
+final int MACPRINT=2;
+final int MACHAPPY=0;
+final int MACBLANK=3;
+final int MACSAD=4;
+final int MACCOULDNTPRINT=5;
+void macDialog(){
+  if (MacLastFrame==0) MacLastFrame=frameCount;
+  switch (MacDialogStatus){
+    case MACHAPPYTHENPRINT:
+      NokiaScreen.image(GUIhappy,0,0);
+      if ((frameCount-MacLastFrame)>10*15) MacDialogStatus=MACPRINT;
+      break;
+    case MACPRINT:
+      NokiaScreen.image(GUIprint,0,0);
+      MacLastFrame=0;
+      waitKeyAny=true;
+      break;
+    case MACBLANK:
+      NokiaScreen.image(GUIwindow,0,0);
+      centerString("PASSWORD?",42,24);
+      if ((frameCount-MacLastFrame)>10*15) MacDialogStatus=MACSAD;
+      break;
+    case MACSAD:
+      NokiaScreen.image(GUIsad,0,0);
+      waitKeyAny=true;;
+      break;
+    case MACCOULDNTPRINT:
+      NokiaScreen.image(GUIhappy,0,0);
+      centerString("Printer offline",42,24,1);
+      if ((frameCount-MacLastFrame)>10*15) MacDialogStatus=MACSAD;
+      break;
+    
+  }
+  
   
 }

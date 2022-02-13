@@ -114,7 +114,11 @@ void hideObjects() {
   }
   /* This is a debug function */
   croquisLlaves();
+
+  /* Insert random Items */
+  insertRndItems();
 }
+
 
 void croquisLlaves() {
   Room thisroom;
@@ -139,13 +143,13 @@ void croquisLlaves() {
                   for (it=0; it<thisfurniture.items.length; it++) {
                     if (thisfurniture.items[it].itype==ITEMKEY) {
                       println("Llave "+thisfurniture.items[it].keynum+
-                        "en "+thisfurniture.name+" "+
+                        " en "+thisfurniture.name+" "+
                         (thisfurniture.locked ? ("cerrado con llave "+thisfurniture.keynum) : "abierto")+
                         " en "+thisroom.name+" "+planta+sala);
                     }
                     if (thisfurniture.items[it].itype==ITEMSECRETRECIPE) {
                       println("Receta "+thisfurniture.items[it].keynum+
-                        "en "+thisfurniture.name+" "+
+                        " en "+thisfurniture.name+" "+
                         (thisfurniture.locked ? ("cerrado con llave "+thisfurniture.keynum) : "abierto")+
                         " en "+thisroom.name+" "+planta+sala);
                     }
@@ -166,15 +170,18 @@ class PercentApparition {
   PercentApparition(int item, int percent) {
     this.item=item;
     this.percent=percent;
-  this.maxPercent=100;
+  }
+  String toString() {
+    return "("+percent+"%: "+item+")";
   }
 };
 
 class ItemChooser {
   PercentApparition[] pTable;
-  this.maxPercent=100;
+  int maxPercent=100;
   ItemChooser(int[] percents) {
     int max=0;
+    this.pTable=new PercentApparition[0];
     for (int f=0; f<percents.length; f+=2) {
       if (percents.length<(f+1)) break;
       this.pTable=(PercentApparition[]) append(this.pTable, new PercentApparition(percents[f], percents[f+1]));
@@ -187,18 +194,26 @@ class ItemChooser {
   }
   /* "Plus" lowers dice roll */
   int choose(int plus) {
-
     if (pTable==null || pTable.length<1) return ITEMEMPTY;
     int roll=int(random(maxPercent))-plus;
     println("roll:"+roll);
-    int current=0; 
+    /* DEBUG START*/
+    //String strDebug="";
+    //for (int i=0;i<pTable.length;i++){
+    //  strDebug=strDebug+pTable[i].toString()+",";
+    //}
+    //println(strDebug);
+    /* DEBUG END */
+    int current=0;
     int index=0;
-    while (roll>(current+pTable[index].percent)) {
+    while (index<pTable.length) {
+      println ("index:"+index+ " current:"+current);
+      if (roll<(current+pTable[index].percent)) break;
       current+=abs(pTable[index].percent);
       index++;
-      if (index>pTable.length || current>=this.max) break;
+      if (index>=pTable.length || current>=this.maxPercent) break;
     }  
-    if (index>ptable.length) {
+    if (index>=pTable.length) {
       println("index:", index, ". No item");
       return ITEMEMPTY;
     } else {
@@ -208,29 +223,29 @@ class ItemChooser {
   }
 };
 HashMap <Integer, ItemChooser>PA=new HashMap<Integer, ItemChooser>();
-void insertrnditems() {
+void insertRndItems() {
   Room thisroom;
   int planta, sala, y, x, it;
   int extra, objetoElegido;
   Item nuevoObjeto;
   Furniture thisfurniture;
 
-  PA.put (FURNBOOKCASE, forBookcase);
-  PA.put (FURNCABINET, forCabinet);
-  PA.put (FURNSHELF, forShelf );
-  PA.put (FURNWARDROBE, forWardrobe);
-  PA.put (FURNFRAME, forFrame);
-  PA.put (FURNBIGFILE, forBigfile);
-  PA.put (FURNCOPIER, forCopier);
-  PA.put (FURNSAFE, forSafe);
-  PA.put (FURNCOFFEETABLE, forCoffeetable);
-  PA.put (FURNCOFFEE, forCoffee);
-  PA.put (FURNFRIDGE, forFridge);
-  PA.put(FURNMICROWAVE, forMicrowave);
-  PA.put(FURNDRAWER, forDrawer);
-  PA.put(FURNWC, forWC);
-  PA.put(FURNLABTABLE, forTable);
-  PA.put(FURNMIRROR, forFrame);
+  PA.put (FURNBOOKCASE, new ItemChooser( forBookcase));
+  PA.put (FURNCABINET, new ItemChooser(forCabinet));
+  PA.put (FURNSHELF, new ItemChooser(forShelf ));
+  PA.put (FURNWARDROBE, new ItemChooser(forWardrobe));
+  PA.put (FURNFRAME, new ItemChooser(forFrame));
+  PA.put (FURNBIGFILE, new ItemChooser(forBigfile));
+  PA.put (FURNCOPIER, new ItemChooser(forCopier));
+  PA.put (FURNSAFE, new ItemChooser(forSafe));
+  PA.put (FURNCOFFEETABLE, new ItemChooser(forCoffeetable));
+  PA.put (FURNCOFFEE, new ItemChooser(forCoffee));
+  PA.put (FURNFRIDGE, new ItemChooser(forFridge));
+  PA.put(FURNMICROWAVE, new ItemChooser(forMicrowave));
+  PA.put(FURNDRAWER, new ItemChooser(forDrawer));
+  PA.put(FURNWC, new ItemChooser(forWC));
+  PA.put(FURNLABTABLE, new ItemChooser(forTable));
+  PA.put(FURNMIRROR, new ItemChooser(forFrame));
 
   for (planta=0; planta<8; planta++) {
     for (sala=0; sala<8; sala++) {
@@ -249,14 +264,16 @@ void insertrnditems() {
                   extra+=10;
                 }
                 if (thisfurniture.space>0) {
-                  objetoElegido=PA.get(thisfurniture.fitem).chose();
-                  nuevoObjeto=new Item(objetoElegido);
-                  furnObject.addToItemArray(nuevoObjeto);
-                  println("Objeto "+nuevoObjeto.name+
-                    "en "+thisfurniture.name+" "+
-                    (thisfurniture.locked ? ("cerrado con llave "+thisfurniture.keynum) : "abierto")+
-                    " en "+thisroom.name+" "+planta+sala);
-                }
+                  if (PA.containsKey(thisfurniture.ftype)) {
+                    objetoElegido=PA.get(thisfurniture.ftype).choose();
+                    nuevoObjeto=new Item(objetoElegido);
+                    thisfurniture.addToItemArray(nuevoObjeto);
+                    println("Objeto "+nuevoObjeto.name+
+                      " en "+thisfurniture.name+" "+
+                      (thisfurniture.locked ? ("cerrado con llave "+thisfurniture.keynum) : "abierto")+
+                      " en "+thisroom.name+" "+planta+sala);
+                  } /* End check for furniture type in PA */
+                } /* End check for space in furniture */
               } /* FORNITURE NON NULL */
             } /* END FOR x*/
           } /* END FOR y*/
@@ -887,7 +904,8 @@ class Room {
   /* Safely get furniture type at (cx,cy) OLD RECURSIVE VERSION*/
   int safeGetFurnRecursive(int cx, int cy) {
     if (cx>=5 | cx<0) return FURNINVALID;
-    if (cy<0 | cy>1) return FURNINVALID;
+    if (cy<0 || cy>1) return FURNINVALID;
+    if (furniture==null || furniture.length<cy ) return FURNINVALID;
     if (furniture[cy][cx]==null) return FURNINVALID;
     if (furniture[cy][cx].ftype==FURNSEEUP) return safeGetFurn(cx, cy-1);
     if (furniture[cy][cx].ftype==FURNSEELEFT) return safeGetFurn(cx-1, cy);
@@ -901,7 +919,9 @@ class Room {
     while (tries>0) {
       if (cx>=5 || cx<0) return FURNINVALID;
       if (cy<0 || cy>1) return FURNINVALID;
+      if (furniture==null || furniture.length<cy ) return FURNINVALID;
       if (furniture[cy][cx]==null) return FURNINVALID;
+
       switch  (furniture[cy][cx].ftype) {
       case FURNSEEUP: 
         cy--; 
@@ -1287,6 +1307,14 @@ class Furniture {
       break;
     case FURNMAC:
       /* My idea is choosing a random COPIER and printing a map on that */
+      MacDialogStatus=MACHAPPYTHENPRINT;
+      dialognum=DIALOG_MAC;
+      status=status | STATUSDIALOG;
+      if (insertAtRandomFurn(dst[f], ITEMMAP)==null) {
+        MacDialogStatus=MACCOULDNTPRINT;
+      }
+
+
       break;
     case FURNCOPIER:
       switch  (int (random(10))) {
@@ -1349,7 +1377,6 @@ class Furniture {
       }
     }
   }
-
   /* Check if Furniture contains selected item */
   boolean containsItem(int itype) {
     if (this.items==null) return false;
@@ -1360,4 +1387,40 @@ class Furniture {
     }
     return false;
   }
+  boolean containsKey(int keyNumber) {
+    if (this.items==null) return false;
+    for (int f=0; f<this.items.length; f++) {
+      if ((this.items[f]!=null) &&  (this.items[f].itype==ITEMKEY) ) {
+        if (items[f].keynum==keyNumber) return true;
+      }
+    }
+    return false;
+  }
+  boolean containsPassword(int passwordNumber) {
+    if (this.items==null) return false;
+    for (int f=0; f<this.items.length; f++) {
+      if ((this.items[f]!=null) &&  (this.items[f].itype==ITEMPASSWORD) ) {
+        if (items[f].passnum==passwordNumber) return true;
+      }
+    }
+    return false;
+  }
+  int draw(){
+    NokiaScreen.pushStyle();
+    NokiaScreen.fill(255);
+    NokiaScreen.stroke(0);
+    NokiaScreen.strokeWeight(0);
+    rect(0,0,83,47);
+    String nom=this.name;
+    if (nom.length()>11) nom=nom.substring(0,9);
+    outString(nom,4,4,1);
+    NokiaScreen.popStyle();        
+    if (this.items==null){
+        centerString("Not allowed",20,44);    
+    } else {
+      for (int f=0; f<items.length;f++){
+        image(this.items[f].image,f % 5,int(f/5));
+      }
+    }
+  };
 };

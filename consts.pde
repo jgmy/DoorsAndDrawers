@@ -93,8 +93,15 @@ final String[] passwordNames={
 };
 final String[] bookNames={
   "Malleus Maleficarum", 
-  "MSDXS User's Guide", 
-  ""
+    "MSDXS User's Guide", 
+  "Z-80 Assembler",
+  "1081 cooking recipes",
+  "A history of two Cities",
+  "Cthulhu miths for dumm13s",
+  "Madrid phone guide A-L",
+  "Madrid phone guide M-Z",
+  "Don Quixote",
+  "Hack your ZX-Spectrum"
 };
 /* Item distribution lists */
 final int[] forCabinet= { ITEMGASMASK,1,ITEMMAP,5,ITEMTORCH,5,ITEMCUP,10,ITEMDISKETTEMAC,20,ITEMDISKETTEPCOLD,20};
@@ -107,9 +114,8 @@ final int[] forCopier= {ITEMHINT,1,ITEMPASSWORD,3,ITEMMAP,5};
 final int[] forBigfile= {ITEMPASSWORD,5,ITEMHINT,5,ITEMMAP,5,ITEMDISKETTEPCOLD,5,ITEMDISKETTEMAC,5,ITEMPAPER,20,ITEMENVELOPE,10};
 final int[] forTable=  { ITEMPASSWORD,1, ITEMCLIP, 5,ITEMPAPER,5,ITEMDISKETTEPCOLD,5,ITEMDISKETTEMAC,5 };
 final int[] forCoffeetable={ITEMENVELOPE,1,ITEMCLIP,5,ITEMCUP,5};
-final int[] forCoffee={5,ITEMJARCOFFEE,5,ITEMCUP};
-final int[] forFridge={5,ITEMJARCOFFEE,20,ITEMJAR};
-final int[] forMicrowave={5,ITEMJAR};
-final int[] forWC={1,ITEMHINT,60,ITEMTOILETPAPER};
+final int[] forCoffee={ITEMJARCOFFEE,5,ITEMCUP,5};
+final int[] forFridge={ITEMJARCOFFEE,5,ITEMJAR,20};
+final int[] forMicrowave={ITEMJAR,5};
+final int[] forWC={ITEMHINT,1,ITEMTOILETPAPER,60};
 //Negative on first item means "only if locked"
-final int[] forSafe= {ITEMDIAMOND,-5,ITEMCLOCK,5,ITEMPASSWORD,20,ITEMHINT,20,ITEMGASMASK,20,ITEMMAP,5,ITEMDISKETTEPCOLD,5,ITEMDISKETTEMAC,5};

@@ -36,7 +36,7 @@ int dialognum; /* Chooses between Dialogs */
 
 final int CONFIRM_EXIT=1;
 final int DIALOG_INFO=0;
-
+final int DIALOG_MAC=2;
 PGraphics NokiaScreen;  
 int scale=1; /* sreen resize scale*/
 int nkw=0;
@@ -130,6 +130,8 @@ void draw() {
     if (dialognum==DIALOG_INFO) {
       waitKeyAny=true;
       dialogMessage();
+    } else if (dialognum==DIALOG_MAC){
+      macDialog();
     }
     break;
   case STATUSEXITGAME:

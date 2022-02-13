@@ -49,10 +49,10 @@ class Item {
     case ITEMCUP:
       this.name="Cup";
       this.image=itemCup;
-      break;
-    case ITEMCOFFEE:
+      break;         
+    case ITEMCUPCOFFEE:
       this.name="A cup of coffee";
-      this.image=itemCup;
+      break;
     case ITEMDISKETTEMAC: 
       this.name="3 1/2\" disk";
       this.image=itemDiskettemac;
@@ -104,6 +104,7 @@ class Item {
     case ITEMJARCLIP:
       this.image=itemJar;
       this.name="This jar contains something";
+      break;
     case ITEMJARCOFFEE:
       this.image=itemJar;
       this.name="A jar of coffee";
@@ -119,13 +120,21 @@ class Item {
     case ITEMHINT:
       this.name=hints.get(int(random(hints.size())));;
       this.image=itemPaper;
+      break;
     case ITEMDIAMOND:
       this.name="diamond";
       this.value=100;
       this.image=itemDiamond;
+      break;
     case ITEMCLOCK:
       this.name="Are we looking for mushrooms or Rolx?";
       this.value=50;
+      break;
+      case ITEMTOILETPAPER:
+      this.name="Toilet paper";
+      this.value=10;
+      this.image=itemToiletPaper;
+      break;
    default:
      String str="***********";
      println(str+"NO METHOD FOR ITEM "+this.itype+str);
