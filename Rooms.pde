@@ -1,5 +1,5 @@
 import java.io.*; //<>//
-
+import java.util.Map;
 
 Room[][] piso=new Room[8][8];
 StringList hints=new StringList();
@@ -101,18 +101,18 @@ void hideObjects() {
       }
     }
     /* If we couldn't hide last key. Abort */
-    if ( success==0){
-      
+    if ( success==0) {
+
       println("We couldn't find a place for Key"+nextKeynum);
       break; /* break while */
     }
     // 2- Close next object
-    if (closeRandomFloorOrFurniture()==-1){
+    if (closeRandomFloorOrFurniture()==-1) {
       println("We couldn't find a furniture to close");
       break;
     }
   }
-  /+ This is a debug function */
+  /* This is a debug function */
   croquisLlaves();
 }
 
@@ -162,95 +162,109 @@ void croquisLlaves() {
 
 /* Fill all furniture, depending of item type */
 class PercentApparition {
-  int item, int percent;
-  PercentApparition(int item, int percent){
+  int item, percent;
+  PercentApparition(int item, int percent) {
     this.item=item;
     this.percent=percent;
+  this.maxPercent=100;
   }
 };
 
-class ItemChooser{
+class ItemChooser {
   PercentApparition[] pTable;
-  int maxPercent=100;
-  ItemChooser(int[] percents){
+  this.maxPercent=100;
+  ItemChooser(int[] percents) {
     int max=0;
-    for (int f=0;f<percents.length;f+=2){
+    for (int f=0; f<percents.length; f+=2) {
       if (percents.length<(f+1)) break;
-      this.pTable=(PercentApparition[]) append(this.pTable,new PercentApparition(percents[f],percents[f+1]));
+      this.pTable=(PercentApparition[]) append(this.pTable, new PercentApparition(percents[f], percents[f+1]));
       max=max+percents[f+1];
     }
     if (max>maxPercent) maxPercent=max;
   }
-  int choose(){
+  int choose() {
     return choose(0);
   }
   /* "Plus" lowers dice roll */
-  int choose(int plus){
-   
+  int choose(int plus) {
+
     if (pTable==null || pTable.length<1) return ITEMEMPTY;
     int roll=int(random(maxPercent))-plus;
-     println("roll:"+roll);
+    println("roll:"+roll);
     int current=0; 
     int index=0;
-    while (roll>(current+pTable[index].percent)){
+    while (roll>(current+pTable[index].percent)) {
       current+=abs(pTable[index].percent);
       index++;
-      if (index>pTable.length || current>=max) break;
-    }
-    
+      if (index>pTable.length || current>=this.max) break;
+    }  
     if (index>ptable.length) {
-      println("index:",index,". No item");
+      println("index:", index, ". No item");
       return ITEMEMPTY;
     } else {
-      println("index:",index,". Item"+pTable[index].item);
+      println("index:", index, ". Item"+pTable[index].item);
       return pTable[index].item;
     }
   }
 };
-
-HashMap PA=new HashMap<int,ItemChooser>;
+HashMap <Integer, ItemChooser>PA=new HashMap<Integer, ItemChooser>();
 void insertrnditems() {
+  Room thisroom;
+  int planta, sala, y, x, it;
+  int extra, objetoElegido;
+  Item nuevoObjeto;
+  Furniture thisfurniture;
 
-  int [] forCabinet= { ITEMGASMASK,1,ITEMMAP,5,ITEMTORCH,5,ITEMCUP,10,ITEMDISKETTEMAC,20,ITEMDISKETTEPCOLD,20};
-int [] forDrawer= {ITEMCLOCK,-5,ITEMHINT,1,ITEMMAP,5,ITEMGASMASK,5,ITEMTORCH,5,ITEMDISKETTEMAC,5,ITEMDISKETTEPCOLD,5};
-int [] forShelf= { ITEMCUP,10,ITEMJARCLIP,5,ITEMJAR,10,ITEMDISKETTEMAC,10,ITEMDISKETTEPCOLD,10};
-  int [] forBookcase=  { ITEMPASSWORD,5, ITEMBOOK, 10,ITEMJAR,10 };
-  int[] forWardrobe= {ITEMGASMASK,5,ITEMTORCH,5,ITEMJAR,10};
-  int[] forFrame= {ITEMHINT,5,ITEMPASSWORD,5};
-int[] forCopier= {ITEMHINT,1,ITEMPASSWORD,3,ITEMMAP,5};  
-int[] forBigfile= {ITEMPASSWORD,5,ITEMHINT,5,ITEMMAP,5,ITEMDISKETTEPCOLD,5,ITEMDISKETTEMAC,5,ITEMPAPER,20,ITEMENVELOPE,10};
-int [] forTable=  { ITEMPASSWORD,1, ITEMCLIP, 5,ITEMPAPER,5,ITEMDISKETTEPCOLD,5,ITEMDISKETTEMAC,5 };
-int [] forCoffeetable={ITEMENVELOPE,1,ITEMCLIP,5,ITEMCUP,5};
-int[] forCoffee={5,ITEMJARCOFFEE,5,ITEMCUP};
-int[] forFridge={5,ITEMJARCOFFEE,20,ITEMJAR};
-int[] forMicrowave={5,ITEMJAR};
-int[] forWC={1,ITEMHINT,60,ITEMTOILETPAPER};
-// Negative on first item means "only if locked"
-int[] forSafe= {ITEMDIAMOND,-5,ITEMCLOCK,5,ITEMPASSWORD,20,ITEMHINT,20,ITEMGASMASK,20,ITEMMAP,5,ITEMDISKETTEPCOLD,5,ITEMDISKETTEMAC,5};
-PA.put (FURNBOOKCASE,forBookcase);
-PA.put (FURNCABINET, forCabinet);
-PA.put (FURNSHELF,forShelf );
-PA.put (FURNWARDROBE,forWardrobe);
-PA.put (FURNFRAME, forFrame);
-PA.put (FURNBIGFILE,forBigfile);
-PA.put (FURNCOPIER,forCopier);
-PA.put (FURNSAFE,forSafe);
-PA.put (FURNCOFFEETABLE,forCoffeetable);
-PA.put (FURNCOFFEE,forCoffee);
-PA.put (FURNFRIDGE,forFridge);
-PA.put(FURNMICROWAVE,forMicrowave);
-PA.put(FURNDRAWER,forDrawer);
-PA.put(FURNWC,forWC);
-FURNWC,
-FURNTAP,
-/* LAST ADDED */
-FURNMICROSCOPE,
-FURNLABTABLE,
-FURNLAMP,
-FURNMIRROR,
+  PA.put (FURNBOOKCASE, forBookcase);
+  PA.put (FURNCABINET, forCabinet);
+  PA.put (FURNSHELF, forShelf );
+  PA.put (FURNWARDROBE, forWardrobe);
+  PA.put (FURNFRAME, forFrame);
+  PA.put (FURNBIGFILE, forBigfile);
+  PA.put (FURNCOPIER, forCopier);
+  PA.put (FURNSAFE, forSafe);
+  PA.put (FURNCOFFEETABLE, forCoffeetable);
+  PA.put (FURNCOFFEE, forCoffee);
+  PA.put (FURNFRIDGE, forFridge);
+  PA.put(FURNMICROWAVE, forMicrowave);
+  PA.put(FURNDRAWER, forDrawer);
+  PA.put(FURNWC, forWC);
+  PA.put(FURNLABTABLE, forTable);
+  PA.put(FURNMIRROR, forFrame);
 
-}
-
+  for (planta=0; planta<8; planta++) {
+    for (sala=0; sala<8; sala++) {
+      /* ROOM CHOSEN */
+      extra=0;
+      if (piso[planta][sala]!=null) {
+        thisroom=piso[planta][sala];
+        if (thisroom.locked) extra=10;
+        if (thisroom.rtype!=HSTAIRS && thisroom.furniture!=null) {
+          for (y=0; y<2; y++) {
+            for (x=0; x<5; x++) {
+              /* FORNITURE CHOSEN */
+              if (thisroom.furniture[y][x]!=null) {
+                thisfurniture=thisroom.furniture[y][x];
+                if (thisfurniture.locked) {
+                  extra+=10;
+                }
+                if (thisfurniture.space>0) {
+                  objetoElegido=PA.get(thisfurniture.fitem).chose();
+                  nuevoObjeto=new Item(objetoElegido);
+                  furnObject.addToItemArray(nuevoObjeto);
+                  println("Objeto "+nuevoObjeto.name+
+                    "en "+thisfurniture.name+" "+
+                    (thisfurniture.locked ? ("cerrado con llave "+thisfurniture.keynum) : "abierto")+
+                    " en "+thisroom.name+" "+planta+sala);
+                }
+              } /* FORNITURE NON NULL */
+            } /* END FOR x*/
+          } /* END FOR y*/
+        }/* END cHECK FOR HSTAIRS */
+      }/* END CHECK FOR NULL ROOM */
+    }    /* END ROOM CHOOSING */
+  }
+} /*END FUNCT */
 
 int closeRandomFloorOrFurniture() {
   int randx=int(random(8));
@@ -346,7 +360,7 @@ Furniture insertAtRandomFurn(int[] desttype, int itemtype) {
                   Furniture furnObject= piso[y][x].safeGetFurnObject(yy, xx);
                   if (!furnObject.locked && !furnObject.password) {
                     if (furnObject.space>0) {
-                       // if(itemtype==ITEMKEY) println( "NKN before key insertion:"+nextKeynum);
+                      // if(itemtype==ITEMKEY) println( "NKN before key insertion:"+nextKeynum);
                       Item escondido=new Item(itemtype);
                       // if(itemtype==ITEMKEY) println( "NKN after key insertion:"+nextKeynum);
                       furnObject.addToItemArray(escondido);

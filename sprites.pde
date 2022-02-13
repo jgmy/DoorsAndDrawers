@@ -19,6 +19,10 @@ PImage furnLamp;
 PImage arrowR;
 PImage arrowL;
 PImage emptySpace;
+PImage GUIwindow;
+PImage GUIprint;
+PImage GUIsad;
+PImage GUIhappy;
 
 ArrayList <namedImage> furnFrame=new ArrayList <namedImage>();
 /* Office and Special office furniture*/
@@ -64,6 +68,11 @@ void sprites() {
   filesLoaded++;
   //String path=dataPath(Fileseparator)+File.separator+"assets_rooms"+File.separator;
   String path="";
+
+   GUIwindow=loadImage("GUICOMP-window.png");
+   GUIprint=loadImage("GUICOMP-docprinted.png");
+   GUIsad=loadImage("GUICOMP-icon-sad.png");
+   GUIhappy=loadImage("GUICOMP-icon-happy.png");;
 
   doorOffice=loadImage(path+"office1.png");
   filesLoaded++;
