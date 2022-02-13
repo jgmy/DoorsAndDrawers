@@ -68,6 +68,7 @@ void drawRoom() {
     }
   }
 }
+Furniture itemFromFurn;
 Furniture seekedFurniture;
 void drawInventory(){
  seekedFurniture.draw(); 

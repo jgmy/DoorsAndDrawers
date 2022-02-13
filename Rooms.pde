@@ -1367,6 +1367,7 @@ class Furniture {
       for (int f=0; f<this.items.length; f++) {
         if (this.items[f]==null || this.items[f].itype==ITEMEMPTY) {
           this.items[f]=item;
+          this.items[f].parent=this;
           success=true;
           break;
         }

@@ -14,6 +14,8 @@
  * nokia Jam), but *algorithms* were
  * tried before using other programming engines.
  ***************************************** */
+/* FOR DEBUG PURPOSES */
+final boolean PARALLEL=true;
 
 
 /* In p5js I would use these: */
@@ -29,7 +31,7 @@ int status; /* Chooses between screens */
 final int STATUSINTRO=0;
 final int STATUSFLOOR=2;
 final int STATUSROOM=3;
-final int STATUSOBJECT=4;
+final int STATUSINVENTORY=4;
 final int STATUSDIALOG=128; /* this will be added to status */
 final int STATUSEXITGAME=5; /* after confirming exit building */
 int dialognum; /* Chooses between Dialogs */
@@ -60,8 +62,9 @@ void setup() {
    just in case compiler does not optimize them
    */
 
-thread("sprites");
-//sprites();
+  if (PARALLEL) thread("sprites"); 
+  else sprites();
+  //sprites();
   nkh=scale*48;
   nkw=scale*84;
   nkbuffsize=48*84*displayDensity();
@@ -126,11 +129,18 @@ void draw() {
       dialogExitConfirm();
     }
     break;
+  case STATUSINVENTORY:
+    waitKeyAny=false;
+    maxX=8;
+    maxY=3;
+    drawInventory();
+  default:
+
   case STATUSDIALOG | STATUSROOM:
     if (dialognum==DIALOG_INFO) {
       waitKeyAny=true;
       dialogMessage();
-    } else if (dialognum==DIALOG_MAC){
+    } else if (dialognum==DIALOG_MAC) {
       macDialog();
     }
     break;
@@ -178,6 +188,9 @@ void drawFloor() {
       //println("door"+doorn+" at "+drawx);
       if (drawx>=-60 && drawx<=84) { 
         NokiaScreen.image(piso[myFloor][doorn].outImage, drawx, 0);
+        if (piso[myFloor][doorn].locked) {
+          NokiaScreen.image(sprPadlock, drawx, 0);
+        }
         //println("drawing image at ("+drawx+",0)");
         //println("Drawing floor x:"+(floorx*32+(myX % 32)));
         if (piso[myFloor][doorn].rtype==HSTAIRS) {
@@ -206,7 +219,7 @@ void drawFloor() {
 }
 
 String[] strInstrucciones={"Loading Sprites", "Generating rooms", "Press any key"+
-  " - WASD+SPACE / ARROWS / KEYPAD move"+
+  " - WASD / ARROWS / KEYPAD move, SPACE/ESC select/cancel "+
   " - Find the secret Chorizo Paella recipe and escape building..."};
 int textScrollx=0;
 
@@ -332,7 +345,7 @@ void keyPressed() {
       doEscape();
       break;
     default:
-      println("Key code: "+hex(key));
+      println("ASCII Key code: "+hex(key));
       break;
     }
   } else {
@@ -367,7 +380,7 @@ void keyPressed() {
       doEscape();
       break;
     default:
-      // println("Keycode Pressed"+keyCode);
+      println("Keycode Pressed"+keyCode);
       break;
     }
   }
@@ -470,16 +483,20 @@ void dialogReturn() {
  */
 void enterRoom() {
   myRoom=int(1+myX/32) % 8;
-  if (piso[myFloor][myRoom].rtype==HKITCHEN | 
-    piso[myFloor][myRoom].rtype==HTOILET|
-    piso[myFloor][myRoom].rtype==HOFFICE |
-    piso[myFloor][myRoom].rtype==HOFFICEBOSS |
-    piso[myFloor][myRoom].rtype==HOFFICEREPRO |
-    piso[myFloor][myRoom].rtype==HOFFICELAB |
-    piso[myFloor][myRoom].rtype==HLOBBY ) {
-    myX=2;
-    myY=1;
-    status=STATUSROOM;
+  Room room=piso[myFloor][myRoom];
+  if (room==null) {
+    println("Room "+myFloor+myRoom+" is invalid.");
+    return;
+  }
+  if (room.rtype!=HSTAIRS) {
+    if (room.locked && inventory.containsKey(room.key)) {
+      room.locked=false;
+    }
+    if (!room.locked) {
+      myX=2;
+      myY=1;
+      status=STATUSROOM;
+    }
   }
 }
 void actionRoom() {
@@ -503,6 +520,16 @@ void actionRoom() {
         Furniture furn=piso[myFloor][myRoom].safeGetFurnObject(myX, myY);
         if (furn!=null) furn.image=furnSafe;
         break;
+      case FURNMAC:
+        if (inventory.containsItem(ITEMDISKETTEMAC)) {
+        };
+      }
+    } else if (myY==2 && myX<actions.length && myX>=0  ) {
+      /* Change mode */
+      currentAction=actions[myX];
+      if (currentAction==ACTIONINVENTORY ) {
+        seekedFurniture=inventory;
+        status=STATUSINVENTORY;
       }
     }
   }
