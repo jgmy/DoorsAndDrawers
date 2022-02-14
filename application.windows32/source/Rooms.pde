@@ -1,4 +1,4 @@
-import java.io.*; //<>//
+import java.io.*;
 import java.util.Map;
 
 Room[][] piso=new Room[8][8];
