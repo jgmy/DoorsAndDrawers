@@ -1251,18 +1251,24 @@ class Furniture {
     int returnvalue;
     if (dest.space>0) {
       if (dest.items!=null && this.items!=null) {
-        Item tmpItem=this.items[itemNum];
+        Item tmpItem=this.items[itemNum];        
         returnvalue=dest.receiveItem(tmpItem);
         if (returnvalue==-1) {
+          println("dest.receiveitem devolvió -1");
           /* destination furniture can't receive item. CANCEL */
           return -1;
         } else { 
+          println("todo ok, moviendo objeto a inventario");
           /* Everything OK. Replace items array and increase space */
           this.space++;
           this.items[itemNum]=empty_space;
           return returnvalue;
         }
+      } else {
+        println ("Dest.items es nulo o this.items es nulo");
       }
+    } else {
+      println("Dest has no space");
     }
     return -1;
   }
@@ -1284,14 +1290,12 @@ class Furniture {
       } else {
         return -1;
       }
-    } else { 
-      return -1;
     }
 
     /* Test special furniture */
     switch(this.ftype) {
     case FURNPC:
-      if (item.itype!=ITEMDISKETTEPCOLD ) return -1;
+      if (item.itype!=ITEMDISKETTEPCOLD ) return -1; //<>//
       break;
     case FURNMAC:
       if (item.itype!=ITEMDISKETTEMAC) return -1;

@@ -342,7 +342,7 @@ void keyPressed() {
         enterRoom();
       } else if (status==STATUSROOM) {
         actionRoom();
-      } else if (status==STATUSROOM) {
+      } else if (status==STATUSINVENTORY) {
         actionInventory();
     } else if (status==(STATUSROOM | STATUSDIALOG)) {
         storeRoomX=myX;
@@ -573,7 +573,7 @@ void actionRoom() {
       case FURNBOOKCASE:
       case FURNCABINET:
       case FURNWARDROBE:
-      case  FURNBIGFILE:
+      case FURNBIGFILE:
       case FURNSAFE: 
       case FURNFRIDGE:
       case FURNMICROWAVE:
