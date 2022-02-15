@@ -68,6 +68,10 @@ void drawRoom() {
     */
     
     /* Scroll on bottom when myY<2 */
+    int delx=(scrollDRtx.length() <(84/7)? scrollDRtx.length()*7 : 84);
+    NokiaScreen.noStroke();
+    NokiaScreen.rectMode(CORNERS);
+    NokiaScreen.rect(0,32,delx,40);
     outString(scrollDRtx, -scrollDRi/10, 32, 0);
     if (scrollDRi>0) {
       outString(scrollDRtx, (scrollDRtx.length()+1)*7-(scrollDRi)/10, 32, 0);
@@ -77,13 +81,49 @@ void drawRoom() {
 Furniture itemFromFurn;
 Furniture seekedFurniture;
 void drawInventory(){
+  String selMessage="";
+  
  if (seekedFurniture.draw()==-1){
    // error en inventario. Volver a la pantalla de habitación;
    status=STATUSDIALOG | STATUSROOM;
    dialognum=DIALOGINVENTORYERROR;
    waitKeyAny=true;
+
  }
- NokiaScreen.image(sprHand, myX*16, myY*16);
+ NokiaScreen.image(sprHand, myX*16+4, myY*16+4);
  
+      /*begin show name*/
+      int itemindex=(myX+2*myY);
+      if (itemindex>=0 && itemindex<seekedFurniture.items.length){
+        if ((seekedFurniture.items!=null) && (seekedFurniture.items[itemindex].itype!=ITEMEMPTY)){
+          selMessage=seekedFurniture.items[itemindex].name;
+        } else {
+          selMessage=seekedFurniture.name + " ESC to exit";
+        }
+      } else {
+          selMessage=seekedFurniture.name + " ESC to exit";
+      }
+      if (selMessage!=null) {
+        if (scrollDRtx.equals(selMessage)) {
+          //println("Name has not changed, scroll");
+          if (scrollDRtx.length()>(84/7)) {
+            //println("scroll is",scrollDRi);
+            scrollDRi=(++scrollDRi % (70*scrollDRtx.length()));
+          }
+        } else {
+          //println("Name has changed, load it");
+          scrollDRtx=selMessage;
+          scrollDRi=0;
+        }
+      } 
+      /*end show name */
+
+   if(scrollDRtx!=null && scrollDRtx.length()>0){
+     /* Scroll on bottom when myY<2 */
+    outString(scrollDRtx, -scrollDRi/10, 40, 0);
+    if (scrollDRi>0) {
+      outString(scrollDRtx, (scrollDRtx.length()+1)*7-(scrollDRi)/10, 40, 0);
+    }
+   }
 };
  

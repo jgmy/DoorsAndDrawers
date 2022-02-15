@@ -135,7 +135,7 @@ void draw() {
     break;
   case STATUSINVENTORY:
     waitKeyAny=false;
-    maxX=8;
+    maxX=5;
     maxY=3;
     drawInventory();
     break;
@@ -648,11 +648,15 @@ void actionRoom() {
 
 void actionInventory() { 
   if (status==STATUSINVENTORY) {
+    /* SUGERENCIA: Que el primer objeto de Inventario
+    sea "Volver atrás". Eso reduciría el inventario a 
+    7 elementos */
     if (myX<5 && myX>=0 && myY<2 && myY>=0) {
       if (seekedFurniture==null ||  seekedFurniture.items==null){
           status=STATUSROOM;
           return;
       }
+      
       if ((myX+2*myY)>=0 && ((myX+2*myY)<seekedFurniture.items.length)){
         println("Intentando mover a inventario...");
         seekedFurniture.moveItem(myX+2*myY,inventory);  

@@ -1095,9 +1095,9 @@ class Furniture {
     this.parentRoom=parentRoom;
   }
   Furniture(Room pRoom, int furntype) {
-    container=false;
-    locked=false;
-    space=0;
+    this.container=false;
+    this.locked=false;
+    this.space=0;
     this.parentRoom=pRoom;
     this.ftype=furntype;
     switch (this.ftype) {
@@ -1139,6 +1139,7 @@ class Furniture {
     case FURNFAKEFRAME:
       /*SAFE inside a Picture frame */
     case FURNFRAME:
+      this.space=1;
       int rnd=int(random(furnFrame.size()));
       this.name=furnFrame.get(rnd).name;
       this.image=furnFrame.get(rnd).image;
@@ -1166,10 +1167,12 @@ class Furniture {
     case FURNSAFE:
       this.name="Safe";
       this.image=furnSafe;
+      this.space=4;
       break;
     case FURNTABLE:
       this.name="Desk";
       this.image=furnTable;
+      this.space=1;
       break;
     case FURNCOFFEETABLE:  
       this.name="Coffee table";
@@ -1179,10 +1182,12 @@ class Furniture {
     case FURNSOFA:  
       this.name="Restplace";
       this.image=furnSofa;
+      this.space=0;
       break;
     case FURNCOFFEE:
       this.name="Coffee machine";
       this.image=furnCoffeeMachine;
+      this.space=2; /* SPECIAL SPACE */
       break;
     case FURNFRIDGE:
       this.name="Fridge";
@@ -1211,6 +1216,7 @@ class Furniture {
     case FURNTAP:  
       this.name="Tap";
       this.image=furnTap;
+      this.space=1;
       break;
     case FURNLABTABLE:
       this.name="Table";
@@ -1221,6 +1227,7 @@ class Furniture {
       this.name="Microscope";
       this.image=furnMicroscope;
       /* Special. If I implement a microfilm, I will put it here */
+      this.space=0;
       break;
     case FURNLAMP:
       this.name="Lamp";
@@ -1233,6 +1240,7 @@ class Furniture {
       /*   Special. Maybe I implement a secret mirror message,
        such as releasing a password when there is a message on mirror 
        */
+       this.space=1;
       break;
     case FURNINVENTORY:
       this.name="Inventory";
@@ -1295,7 +1303,7 @@ class Furniture {
     /* Test special furniture */
     switch(this.ftype) {
     case FURNPC:
-      if (item.itype!=ITEMDISKETTEPCOLD ) return -1; //<>//
+      if (item.itype!=ITEMDISKETTEPCOLD ) return -1;
       break;
     case FURNMAC:
       if (item.itype!=ITEMDISKETTEMAC) return -1;
@@ -1346,11 +1354,15 @@ class Furniture {
         tmpDialog("NO TONER");
         break;
       default:
-        addToItemArray(item);
-
+        /* Makes a copy */
+          addToItemArray(item.copy());
+          addToItemArray(item);
         break;
       }
       break;
+    default:
+        addToItemArray(item);
+        break;
     case FURNCOFFEE:
       if ((item.itype==ITEMCUP) && this.containsItem(ITEMJARCOFFEE)){
         item.itype=ITEMCUPCOFFEE;
@@ -1380,6 +1392,9 @@ class Furniture {
      Si el espacio es insuficiente, es que nos llaman desde
      las rutinas de creación de mapa
      */
+    if (this.ftype==FURNINVENTORY){
+      println("FURNINVENTORY");
+    }
     if (this.space==0) this.space++;
     if (this.items==null) {
       /* Si la matriz es nula, crear una nueva matriz */
@@ -1467,7 +1482,7 @@ class Furniture {
     NokiaScreen.rect(0,0,83,47);
     String nom=this.name;
     if (nom.length()>11) nom=nom.substring(0,9);
-    outString(nom,4,4,1);
+    //outString(nom,4,4,1);
     NokiaScreen.popStyle();        
     if (this.items==null){
       // return -1;
@@ -1480,7 +1495,7 @@ class Furniture {
         }
       }
     }
-    outString("ESC:exit",0,32,0);
+    //outString("ESC:exit",0,32,0);
     return 0;
   };
 };
