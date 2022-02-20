@@ -285,8 +285,9 @@ void keyPressed() {
   if (waitKeyAny|status==STATUSINTRO) {
     // println("Any key Pressed"+status);
     // println("Sprites loaded:"+spritesLoaded);
-    if (status==STATUSINTRO) status=STATUSFLOOR;
-    else if (status==STATUSROOM) 
+    if (status==STATUSINTRO){
+      status=STATUSFLOOR;
+    } else if (status==STATUSROOM) 
     {
       status=STATUSFLOOR;
       myX=((7+myRoom) % 8)*32;
@@ -294,9 +295,10 @@ void keyPressed() {
     // println("Next Status"+status);
     return;
   } else if (status==(STATUSDIALOG | STATUSROOM)) {
+    status=STATUSROOM;    
     myX=storeRoomX;
     myY=storeRoomY;
-  }
+  } 
 
   //println("Keypressed");
   if (key!=CODED) {
@@ -531,6 +533,9 @@ void enterRoom() {
   if (room.rtype!=HSTAIRS) {
     if (room.locked && inventory.containsKey(room.key)) {
       room.locked=false;
+      println("Abierta habitación con llave "+room.key);
+    } else if (room.locked){
+      println("Necesita la llave "+room.key);
     }
     if (!room.locked) {
       myX=2;
@@ -560,6 +565,7 @@ void actionRoom() {
         /* reveal fake frames */
         furn=piso[myFloor][myRoom].safeGetFurnObject(myX, myY);
         if (furn!=null) furn.image=furnSafe;
+        println("This is a fake frame");
         break;
       case FURNMAC:
         if (inventory.containsItem(ITEMDISKETTEMAC)) {
@@ -570,6 +576,7 @@ void actionRoom() {
         break;
       case FURNCOPIER:
         break;
+/* THESE COULD BE CLOSED */
       case FURNBOOKCASE:
       case FURNCABINET:
       case FURNWARDROBE:
@@ -580,11 +587,12 @@ void actionRoom() {
       case FURNDRAWER:
         furn=piso[myFloor][myRoom].safeGetFurnObject(myX, myY);
         if (furn!=null) {
-          if (furn.locked) { 
+          if (furn.locked) {
+             println(furn.name+"is locked");
             if (inventory.containsKey(furn.keynum) ) {
               furn.locked=false;
             }
-          };
+          }
           if (furn.password) {
             if (inventory.containsPassword(furn.passnum)) {
               furn.locked=false;
@@ -596,15 +604,22 @@ void actionRoom() {
           }
         }
         break;
-
+/* THESE ARE SPECIAL */
       case FURNMIRROR:
-      case FURNFRAME:
+      case FURNFRAME:        
         /*These could contain hints */
-        seekedFurniture=inventory;
-        status=STATUSINVENTORY;
+        furn=piso[myFloor][myRoom].safeGetFurnObject(myX, myY);
+        if (furn!=null) {        
+          seekedFurniture=furn;
+          status=STATUSINVENTORY;
+        }
         break;
+
+/*THESE ARE NEVER CLOSED */
       case FURNWC:
+        println("Oh, so nasty");
       case FURNTAP:
+      case FURNSHELF:
       case FURNTABLE:
       case FURNLABTABLE:
       case FURNCOFFEETABLE:

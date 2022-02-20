@@ -62,7 +62,7 @@ void drawRoom() {
       for (int f=0; f<inventory.items.length; f++) {
         Item object=inventory.items[f];
         if (inventory.items[f]!=null) {
-          image(inventory.items[f].image, (3+f)*16, 32);
+          NokiaScreen.image(inventory.items[f].image, (3+f)*16, 32);
         }
       }
     */
@@ -93,7 +93,7 @@ void drawInventory(){
  NokiaScreen.image(sprHand, myX*16+4, myY*16+4);
  
       /*begin show name*/
-      int itemindex=(myX+2*myY);
+      int itemindex=(myX+5*myY);
       if (itemindex>=0 && itemindex<seekedFurniture.items.length){
         if ((seekedFurniture.items!=null) && (seekedFurniture.items[itemindex].itype!=ITEMEMPTY)){
           selMessage=seekedFurniture.items[itemindex].name;

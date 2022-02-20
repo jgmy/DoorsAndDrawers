@@ -80,33 +80,40 @@ final int MACBLANK=3;
 final int MACSAD=4;
 final int MACCOULDNTPRINT=5;
 void macDialog(){
+  waitKeyAny=true;
   if (MacLastFrame==0) MacLastFrame=frameCount;
   switch (MacDialogStatus){
     case MACHAPPYTHENPRINT:
       NokiaScreen.image(GUIhappy,0,0);
-      if ((frameCount-MacLastFrame)>10*15) MacDialogStatus=MACPRINT;
+      if ((frameCount-MacLastFrame)>10*15){
+        MacDialogStatus=MACPRINT;
+        MacLastFrame=0;
+      }
       break;
     case MACPRINT:
       NokiaScreen.image(GUIprint,0,0);
-      MacLastFrame=0;
-      waitKeyAny=true;
       break;
     case MACBLANK:
       NokiaScreen.image(GUIwindow,0,0);
       centerString("PASSWORD?",42,24);
-      if ((frameCount-MacLastFrame)>10*15) MacDialogStatus=MACSAD;
+      if ((frameCount-MacLastFrame)>10*15){
+        MacDialogStatus=MACSAD;
+      }
       break;
     case MACSAD:
       NokiaScreen.image(GUIsad,0,0);
-      waitKeyAny=true;;
       break;
     case MACCOULDNTPRINT:
-      NokiaScreen.image(GUIhappy,0,0);
-      centerString("Printer offline",42,24,1);
-      if ((frameCount-MacLastFrame)>10*15) MacDialogStatus=MACSAD;
+      NokiaScreen.image(GUIwindow,0,0);
+      centerString("Printer",42,16,0);
+      centerString("offline",42,24,0);
+      if ((frameCount-MacLastFrame)>10*15) status=STATUSROOM;
       break;
-    
   }
-  
+  if ((frameCount-MacLastFrame)>20*15) {
+    MacLastFrame=0;
+    status=STATUSROOM;
+  }
+    
   
 }

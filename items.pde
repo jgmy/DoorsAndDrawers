@@ -74,6 +74,7 @@ class Item {
       this.image=itemKey.get(rand);
       this.isKey=true;
       this.keynum=nextKeynum++;
+      this.name="Key "+keynum;
       break;
     case ITEMMAP: 
       this.image=itemMap;

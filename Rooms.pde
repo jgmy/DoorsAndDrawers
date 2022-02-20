@@ -588,7 +588,7 @@ class Room {
             break;
 
           case 6: 
-            if (fy==1) {
+            if (fy==0) {
               furniture[fy][fx]=new Furniture(this, (int(random(10))==1) ? FURNFAKEFRAME: FURNFRAME);
             }
             break;
@@ -1006,7 +1006,7 @@ class Room {
             if (this.furniture[cy][cx].image!=null) {
               NokiaScreen.image(this.furniture[cy][cx].image, cx*16, cy*16);
               if (this.furniture[cy][cx].locked){
-                image(sprPadlock2,cx*16,cy*16);
+                NokiaScreen.image(sprPadlock2,cx*16,cy*16);
               }
           } else {
               // println("NULL image:"+this.furniture[cy][cx].name);
@@ -1489,9 +1489,9 @@ class Furniture {
     } else {
       for (int f=0; f<items.length;f++){
         if (this.items[f]!=null && this.items[f].image!=null){
-          NokiaScreen.image(this.items[f].image,4+16*(f % 4),4+16*int(f/4));
+          NokiaScreen.image(this.items[f].image,4+16*(f % 5),4+16*int(f/5));
         } else {
-          NokiaScreen.image(emptySpace,4+16*(f % 4),4+16*int(f/4));
+          NokiaScreen.image(emptySpace,4+16*(f % 5),4+16*int(f/5));
         }
       }
     }
