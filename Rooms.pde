@@ -583,7 +583,7 @@ class Room {
           case 4:
           case 5: /*FURNCOFFEETABLE */
             if (fx==1) {
-              furniture[fx][fy]=new Furniture(this, FURNCOFFEETABLE);
+              furniture[fy][fx]=new Furniture(this, FURNCOFFEETABLE);
             }
             break;
 
@@ -851,8 +851,8 @@ class Room {
   }
 
   /* Place topftype on top of bottomftype                    */
-  /* iff [fx][0] is empty and [fx][1]=bottomftype[] or empty  */
-  /* (makes emptyftype  if [fx][1] empty)                    */
+  /* iff [0][fx] is empty and [1][fx]=bottomftype[] or empty  */
+  /* (makes emptyftype  if [1][fx] empty)                    */
   void onTopOf(int cx, int cy, int[] topftype, int[] bottomftype, int[] extraftype) {
     int[] bottomextra;
     if (cx<0|cx>4|cy<0|cy>1) return;
