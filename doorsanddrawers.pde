@@ -143,14 +143,19 @@ void draw() {
     if (dialognum==DIALOG_INFO) {
       waitKeyAny=true;
       dialogMessage();
+    } else if (dialognum==CONFIRM_EXIT) {
+      waitKeyAny=false;
+      maxX=2;
+      maxY=1;
+      dialogExitConfirm();
     } else if (dialognum==DIALOG_MAC) {
       macDialog();
       waitKeyAny=true;
-    } else if (dialognum== DIALOGINVENTORYERROR){
-      
+    } else if (dialognum== DIALOGINVENTORYERROR) {
+
       waitKeyAny=true;
     }
- 
+
     break;
   case STATUSEXITGAME:
     waitKeyAny=true;
@@ -285,7 +290,7 @@ void keyPressed() {
   if (waitKeyAny|status==STATUSINTRO) {
     // println("Any key Pressed"+status);
     // println("Sprites loaded:"+spritesLoaded);
-    if (status==STATUSINTRO){
+    if (status==STATUSINTRO) {
       status=STATUSFLOOR;
     } else if (status==STATUSROOM) 
     {
@@ -346,7 +351,7 @@ void keyPressed() {
         actionRoom();
       } else if (status==STATUSINVENTORY) {
         actionInventory();
-    } else if (status==(STATUSROOM | STATUSDIALOG)) {
+      } else if (status==(STATUSROOM | STATUSDIALOG)) {
         storeRoomX=myX;
         storeRoomY=myY;
       }
@@ -476,15 +481,17 @@ void doEscape() {
       break;
     }
   } else {
-    switch (status){
-      case STATUSINVENTORY:
-        status=STATUSROOM;
-        myX=0;
-        myY=0;
-        println("exit via 1");
+    switch (status) {
+    case STATUSINVENTORY:
+      status=STATUSROOM;
+      myX=0;
+      myY=0;
+      println("exit via 1");
       break;
+    default:
+      status=status|STATUSDIALOG;
+      dialognum=CONFIRM_EXIT;
     }
-  
   }
 }
 
@@ -534,7 +541,7 @@ void enterRoom() {
     if (room.locked && inventory.containsKey(room.key)) {
       room.locked=false;
       println("Abierta habitación con llave "+room.key);
-    } else if (room.locked){
+    } else if (room.locked) {
       println("Necesita la llave "+room.key);
     }
     if (!room.locked) {
@@ -576,7 +583,7 @@ void actionRoom() {
         break;
       case FURNCOPIER:
         break;
-/* THESE COULD BE CLOSED */
+        /* THESE COULD BE CLOSED */
       case FURNBOOKCASE:
       case FURNCABINET:
       case FURNWARDROBE:
@@ -588,7 +595,7 @@ void actionRoom() {
         furn=piso[myFloor][myRoom].safeGetFurnObject(myX, myY);
         if (furn!=null) {
           if (furn.locked) {
-             println(furn.name+"is locked");
+            println(furn.name+"is locked with:"+furn.keynum);
             if (inventory.containsKey(furn.keynum) ) {
               furn.locked=false;
             }
@@ -604,7 +611,7 @@ void actionRoom() {
           }
         }
         break;
-/* THESE ARE SPECIAL */
+        /* THESE ARE SPECIAL */
       case FURNMIRROR:
       case FURNFRAME:        
         /*These could contain hints */
@@ -615,7 +622,7 @@ void actionRoom() {
         }
         break;
 
-/*THESE ARE NEVER CLOSED */
+        /*THESE ARE NEVER CLOSED */
       case FURNWC:
         println("Oh, so nasty");
       case FURNTAP:
@@ -664,18 +671,17 @@ void actionRoom() {
 void actionInventory() { 
   if (status==STATUSINVENTORY) {
     /* SUGERENCIA: Que el primer objeto de Inventario
-    sea "Volver atrás". Eso reduciría el inventario a 
-    7 elementos */
+     sea "Volver atrás". Eso reduciría el inventario a 
+     7 elementos */
     if (myX<5 && myX>=0 && myY<2 && myY>=0) {
-      if (seekedFurniture==null ||  seekedFurniture.items==null){
-          status=STATUSROOM;
-          return;
+      if (seekedFurniture==null ||  seekedFurniture.items==null) {
+        status=STATUSROOM;
+        return;
       }
-      
-      if ((myX+2*myY)>=0 && ((myX+2*myY)<seekedFurniture.items.length)){
+
+      if ((myX+2*myY)>=0 && ((myX+2*myY)<seekedFurniture.items.length)) {
         println("Intentando mover a inventario...");
-        seekedFurniture.moveItem(myX+2*myY,inventory);  
-        
+        seekedFurniture.moveItem(myX+2*myY, inventory);
       }
     }
   }

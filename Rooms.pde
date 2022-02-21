@@ -1,4 +1,4 @@
-import java.io.*; //<>//
+import java.io.*;
 import java.util.Map;
 
 Room[][] piso=new Room[8][8];
@@ -416,6 +416,9 @@ class Room {
   // 84/16=5 (five spaces)
   Furniture[][] furniture=new Furniture[2][5];
   Room(int tipo) {
+    /* CLEAR */
+    this.furniture=new Furniture[2][5];
+    
     this.locked=false;
     this.key=0;
     this.rtype=tipo;
@@ -582,7 +585,7 @@ class Room {
             break;
           case 4:
           case 5: /*FURNCOFFEETABLE */
-            if (fx==1) {
+            if (fy==1) {
               furniture[fy][fx]=new Furniture(this, FURNCOFFEETABLE);
             }
             break;
@@ -710,11 +713,19 @@ class Room {
 
   void makeReproOffice() {
     int rx; /* random x and y */
+    /* Start by clearing all just in case this is a FORCED Repro Office: */
+    for (int f=0;f<2;f++) for (int g=0;g<5;g++){
+      this.furniture[f][g]=null;
+    }
     /* Compulsory copier */
     int copiers=1+int(random(2));
     for (int f=0; f<copiers; f++) {
       rx=int(random(4));
+      if (rx>=4) rx=3;
       placeTwoSlots(rx, 1, FURNCOPIER);
+      if (safeGetFurn(rx,1)!=FURNCOPIER){
+        println("**** COULD NOT INSERT COPIER****"); //<>//
+      }
     }
     /* High chance of having drawers or lockers */
     for (rx=0; rx<5; rx++) {
@@ -1006,7 +1017,11 @@ class Room {
             if (this.furniture[cy][cx].image!=null) {
               NokiaScreen.image(this.furniture[cy][cx].image, cx*16, cy*16);
               if (this.furniture[cy][cx].locked){
-                NokiaScreen.image(sprPadlock2,cx*16,cy*16);
+                if (cy==0 && this.furniture[cy+1][cx].ftype==FURNSEEUP) {
+                  NokiaScreen.image(sprPadlock2,cx*16,cy*16);
+                }else{
+                  NokiaScreen.image(sprPadlock2,cx*16,cy*16+8);
+                }
               }
           } else {
               // println("NULL image:"+this.furniture[cy][cx].name);
@@ -1460,9 +1475,11 @@ class Furniture {
     if (this.items==null) return false;
     for (int f=0; f<this.items.length; f++) {
       if ((this.items[f]!=null) &&  (this.items[f].itype==ITEMKEY) ) {
+        println("llaves en inventario: "+items[f].name+" ("+items[f].keynum+")");
         if (items[f].keynum==keyNumber) return true;
       }
     }
+    println("No posee la llave");
     return false;
   }
   boolean containsPassword(int passwordNumber) {
