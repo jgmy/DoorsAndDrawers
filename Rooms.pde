@@ -1018,9 +1018,11 @@ class Room {
               NokiaScreen.image(this.furniture[cy][cx].image, cx*16, cy*16);
               if (this.furniture[cy][cx].locked){
                 if (cy==0 && this.furniture[cy+1][cx].ftype==FURNSEEUP) {
-                  NokiaScreen.image(sprPadlock2,cx*16,cy*16);
-                }else{
                   NokiaScreen.image(sprPadlock2,cx*16,cy*16+8);
+                }else{
+                  if (this.furniture[cy][cx].ftype!=FURNSEEUP) {
+                    NokiaScreen.image(sprPadlock2,cx*16,cy*16);
+                  }
                 }
               }
           } else {

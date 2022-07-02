@@ -123,7 +123,7 @@ void sprites() {
   filesLoaded++;
   furnFrame.add(new namedImage(loadImage(path+"Frame1.png"), "Kandinsky copy")); 
   filesLoaded++;
-  furnFrame.add(new namedImage(loadImage(path+"Frame2.png"), "Spiral pattern"));
+  furnFrame.add(new namedImage(loadImage(path+"frame2.png"), "Spiral pattern"));
   filesLoaded++;
   furnFrame.add(new namedImage(loadImage(path+"Frame3.png"), "Tree"));
   filesLoaded++;
