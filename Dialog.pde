@@ -87,7 +87,7 @@ void macDialog(){
       NokiaScreen.image(GUIhappy,0,0);
       if ((frameCount-MacLastFrame)>10*15){
         MacDialogStatus=MACPRINT;
-        MacLastFrame=0;
+        MacLastFrame=frameCount;
       }
       break;
     case MACPRINT:

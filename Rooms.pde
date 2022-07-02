@@ -713,20 +713,79 @@ class Room {
 
   void makeReproOffice() {
     int rx; /* random x and y */
+    Item[] tempItems=new Item[0];
+    int iitem;
+    int rxx;
+    boolean atLeastOne=false;
+    int copiers=1+int(random(2));
+    
+    // This code will lead us to disaster, deleting not only
+    // door, but possibly removing keys from the map.
     /* Start by clearing all just in case this is a FORCED Repro Office: */
-    for (int f=0;f<2;f++) for (int g=0;g<5;g++){
+    /* for (int f=0;f<2;f++) for (int g=0;g<5;g++){
       this.furniture[f][g]=null;
     }
+    */ 
+    
     /* Compulsory copier */
-    int copiers=1+int(random(2));
     for (int f=0; f<copiers; f++) {
       rx=int(random(4));
       if (rx>=4) rx=3;
       placeTwoSlots(rx, 1, FURNCOPIER);
-      if (safeGetFurn(rx,1)!=FURNCOPIER){
+      if (safeGetFurn(rx,1)!=FURNCOPIER) {
+        atLeastOne=true;
+        /* At least one copier, do not force */
+      }
+      if (atLeastOne==false){
         println("**** COULD NOT INSERT COPIER****"); //<>//
+        println("*** FORCING COPIER ***");
+        int tempFurn1, tempFurn2;
+        tempFurn1=safeGetFurn(rx,1);
+        tempFurn2=safeGetFurn(rx+1,1);
+        if (tempFurn1==FURNSEEUP) tempFurn1=FURNINVALID;
+        if (tempFurn2==FURNSEEUP) tempFurn2=FURNINVALID;
+        if (tempFurn1==FURNINVALID && tempFurn2==FURNINVALID){
+          println("PLACING COPIER BELOW 2-STORY FURNITURE");
+          this.furniture[1][rx]=null;
+          this.furniture[1][rx+1]=null;
+          placeTwoSlots(rx, 1, FURNCOPIER);
+        }
+        // if the latter has failed OR tempFurn1 and tempFurn2 are not invalid
+        // Explore furniture before removing it and place all items into the copier.
+        if (safeGetFurn(rx,1)!=FURNCOPIER){
+          println("DELETING FURNITURE");
+          for (rxx=rx;rx<rx+2;rx++){
+            if (this.furniture[1][rxx]!=null 
+                && this.furniture[1][rxx].items!=null
+                && this.furniture[1][rxx].items.length>0)
+            {             
+              println("FOUND "+str(this.furniture[1][rxx].items.length)+ " ITEMS");
+              if (this.furniture[1][rxx].items.length>0){
+                for (iitem=0; iitem<this.furniture[1][rxx].items.length; iitem++){
+                  println("-");
+                  tempItems =(Item[]) append(tempItems,this.furniture[1][rxx].items[iitem]);
+                }
+              }  
+            } else {
+                println("EMPTY FURNITURE DELETED");
+            }
+            this.furniture[1][rxx]=null;  
+          }        
+          placeTwoSlots(rx,1,FURNCOPIER);
+          if(safeGetFurn(rx,1)!=FURNCOPIER) {
+             println("UNEXPECTED ERROR WITH COPIER");
+          } else {
+            if (tempItems!=null && tempItems.length>0){
+              println("RESTORING "+str(tempItems.length)+" ITEMS");
+              for (iitem=0; iitem<tempItems.length; iitem++){
+                this.furniture[1][rx].items= (Item[]) append(this.furniture[1][rx].items,tempItems[iitem]);
+              }
+            }
+          }
+        }
       }
     }
+   
     /* High chance of having drawers or lockers */
     for (rx=0; rx<5; rx++) {
       if (emptyPlace(rx, 1)) {
@@ -1342,6 +1401,7 @@ class Furniture {
     switch (this.ftype) {
     case FURNPC:
       /* My idea is giving a clue, as "MAP is on"... */
+      
       break;
     case FURNMAC:
       /* My idea is choosing a random COPIER and printing a map on that */

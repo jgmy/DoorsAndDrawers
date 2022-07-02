@@ -125,7 +125,7 @@ void draw() {
     case (STATUSDIALOG | STATUSFLOOR):
     if (dialognum==CONFIRM_EXIT) { 
       waitKeyAny=false;
-      maxX=2;
+      maxX=1;
       maxY=1;
       dialogExitConfirm();
     } else if (dialognum==DIALOG_INFO) {
@@ -145,7 +145,7 @@ void draw() {
       dialogMessage();
     } else if (dialognum==CONFIRM_EXIT) {
       waitKeyAny=false;
-      maxX=2;
+      maxX=1;
       maxY=1;
       dialogExitConfirm();
     } else if (dialognum==DIALOG_MAC) {
@@ -165,7 +165,7 @@ void draw() {
     break;
   case STATUSROOM:
     waitKeyAny=false;
-    maxX=8;
+    maxX=6;
     maxY=3;
     drawRoom();
     break;
@@ -465,19 +465,21 @@ void doEscape() {
     switch (status ^ STATUSDIALOG) {
     case STATUSFLOOR:
       // XOR StatusDIALOG bit
+      status^=STATUSDIALOG;  
+      myX=storeFloorX;
+      println("exit to floor from dialog");
+      break;
+    case STATUSROOM:
+      // XOR StatusDIALOG bit
       status^=STATUSDIALOG;
-      if (status==STATUSFLOOR) {
-        myX=storeFloorX;
-      } else if (status==STATUSROOM) {
-        myX=storeRoomX;
-        myY=storeRoomY;
-      } 
+      myX=storeRoomX;
+      myY=storeRoomY;
       break;
     case STATUSINVENTORY:
       status=STATUSROOM;
       myX=0;
       myY=0;
-      println("exit via 2");
+      println("exit from inventory to room from dialog");
       break;
     }
   } else {
@@ -486,7 +488,12 @@ void doEscape() {
       status=STATUSROOM;
       myX=0;
       myY=0;
-      println("exit via 1");
+      println("exit from INVENTORY to ROOM via ESC");
+      break;
+    case STATUSROOM:
+      myX=storeFloorX;
+      status=STATUSFLOOR;
+      println("exit from ROOM to FLOOR via ESC");
       break;
     default:
       status=status|STATUSDIALOG;
